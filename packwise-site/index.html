@@ -1,0 +1,1283 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><title>PackWise</title><meta name="description" content="PackWise builds your packing list from the weather, checks that your bag fits, and talks you through packing. Veteran owned and operated."></head><body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: "Teal Band" direction — rounded teal header with the logo and talking-suitcase line, colored Scan/Plan/Pack tiles (teal, blue, orange), then white cards on cream in two columns that stack on phones */
+:root{
+  --bg:#FBF6EC; --surface:#FFFFFF; --ink:#1D2A28; --muted:#5E6B68; --line:#EFE7D6; --shadow:#E8DFCC;
+  --brand:#46958A; --brand-2:#57B5A9; --brand-deep:#2F7F75; --on-brand:#FFFFFF; --mint:#E3F4F1;
+  --band:#2F7F75; --on-band:#FFFFFF; --band-soft:#E3F4F1; --band-wise:#BFEDE5;
+  --accent:#EBA33E; --accent-deep:#D98F28; --on-accent:#1D2A28; --bubble:#FFF1D9;
+  --sky:#2F6FAE; --on-sky:#FFFFFF; --sky-soft:#DCEAF7;
+  --good:#2F7F75; --warn:#A8620A; --bad:#B3261E; --soft:#FBF6EC;
+  --display:"Poppins", "Avenir Next", "Segoe UI", sans-serif;
+  --body:"Poppins", "Avenir Next", "Segoe UI", sans-serif;
+  --mono:"Poppins", "Avenir Next", "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101614; --surface:#19231F; --ink:#EDF2F0; --muted:#9AA8A4; --line:#2B3834; --shadow:#0A0F0D;
+  --brand:#4FA699; --brand-2:#6BC6B9; --brand-deep:#3A8378; --on-brand:#FFFFFF; --mint:#1D3430;
+  --band:#1F5C55; --on-band:#FFFFFF; --band-soft:#D8EFEB; --band-wise:#BFEDE5;
+  --accent:#F0AE4A; --accent-deep:#E09A30; --on-accent:#1D2A28; --bubble:#33281A;
+  --sky:#3B7DC0; --on-sky:#FFFFFF; --sky-soft:#E1EDF9;
+  --good:#6BC6B9; --warn:#EDAA4D; --bad:#F2756C; --soft:#141D1A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101614; --surface:#19231F; --ink:#EDF2F0; --muted:#9AA8A4; --line:#2B3834; --shadow:#0A0F0D;
+  --brand:#4FA699; --brand-2:#6BC6B9; --brand-deep:#3A8378; --on-brand:#FFFFFF; --mint:#1D3430;
+  --band:#1F5C55; --on-band:#FFFFFF; --band-soft:#D8EFEB; --band-wise:#BFEDE5;
+  --accent:#F0AE4A; --accent-deep:#E09A30; --on-accent:#1D2A28; --bubble:#33281A;
+  --sky:#3B7DC0; --on-sky:#FFFFFF; --sky-soft:#E1EDF9;
+  --good:#6BC6B9; --warn:#EDAA4D; --bad:#F2756C; --soft:#141D1A; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* header band */
+header.band{background:var(--band);color:var(--on-band);border-radius:0 0 28px 28px}
+header .wrap{padding-block:20px 26px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 28px}
+.lockup{display:flex;align-items:center;gap:12px}
+.mark{width:54px;height:54px;flex:none}
+.brand{font-family:var(--display);font-weight:600;font-size:clamp(26px,4.2vw,34px);letter-spacing:-.01em;line-height:1}
+.brand span{color:var(--band-wise)}
+.motto{font-size:11.5px;letter-spacing:.28em;color:var(--band-soft);margin-top:6px}
+.hero{max-width:440px;min-width:0}
+.hero p{margin:0;font-family:var(--display);font-weight:700;font-size:clamp(20px,2.8vw,26px);line-height:1.25;text-wrap:balance}
+.hero small{display:block;color:var(--band-soft);font-size:13px;margin-top:4px}
+
+/* Business / Pleasure switch */
+header.band{transition:background-color .3s ease}
+body[data-mode="business"] header.band{background:#1F4D58}
+.modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:6px;margin-top:18px;background:var(--surface);border-radius:999px;box-shadow:0 2px 0 var(--shadow)}
+.modes button{display:flex;align-items:center;justify-content:center;gap:10px;border:0;border-radius:999px;padding:10px 14px;background:transparent;color:var(--muted);text-align:left;min-height:52px}
+.modes svg{width:24px;height:24px;flex:none}
+.modes b{display:block;font-size:15px;font-weight:600;color:inherit;line-height:1.2}
+.modes small{display:block;font-size:11.5px;line-height:1.3;opacity:.85}
+#modeBiz[aria-selected="true"]{background:#1F4D58;color:#FFFFFF}
+#modePlay[aria-selected="true"]{background:var(--accent);color:var(--on-accent)}
+@media (max-width:520px){.modes small{display:none}}
+.day .tip{font-size:13.5px;margin-top:4px;padding:6px 10px;border-radius:10px;background:var(--mint)}
+.day .tip span{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--on-brand);background:var(--brand-deep);padding:1px 7px;border-radius:999px;margin-right:6px}
+body[data-mode="business"] .day .tip span{background:#1F4D58}
+
+/* colored step tiles */
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding-block:18px 0}
+.step{display:flex;flex-direction:column;gap:6px;padding:12px 14px 14px;border-radius:18px;min-width:0;transition:transform .2s ease}
+#st1{background:var(--brand-deep);color:var(--on-brand)}
+#st2{background:var(--sky);color:var(--on-sky)}
+#st3{background:var(--accent);color:var(--on-accent)}
+.step .n{font-weight:700;font-size:13px;width:28px;height:28px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--on-accent)}
+#st3 .n{background:#FFFFFF;color:#1D2A28}
+.step b{display:block;font-size:16px;font-weight:700}
+.step span{display:block;font-size:12.5px;line-height:1.35;opacity:.92}
+.step.on{box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--accent)}
+#st3.on{box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--brand-deep)}
+
+@media (max-width:560px){.step span{display:none}.step{padding:10px 12px}}
+
+main .wrap{padding-block:18px 48px;display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:840px){main .wrap{grid-template-columns:minmax(0,1fr)}}
+.col{display:flex;flex-direction:column;gap:18px;min-width:0}
+
+.panel{background:var(--surface);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0;box-shadow:0 2px 0 var(--shadow)}
+.phead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.phead .k{font-size:11.5px;font-weight:700;letter-spacing:.14em;color:var(--on-brand);background:var(--brand-deep);padding:3px 10px;border-radius:999px}
+#planH,#scanH{margin:0}
+h2{font-family:var(--display);font-weight:600;font-size:18px;margin:0;text-wrap:balance}
+h3{font-size:11.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0}
+label{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:13.5px}
+input,select,textarea{font:inherit;font-weight:400;color:var(--ink);background:var(--soft);border:2px solid var(--line);border-radius:12px;padding:10px 12px;width:100%;min-width:0}
+textarea{resize:vertical;min-height:70px}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,.bagopt:focus-within,.tabs button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.check{flex-direction:row;align-items:center;gap:8px;font-weight:500}
+.check input{width:20px;height:20px;accent-color:var(--brand-deep)}
+.hint{font-size:12.5px;color:var(--muted);margin:0;font-weight:400}
+.status{font-size:13.5px;color:var(--muted);min-height:1.2em;margin:0}
+.status.err{color:var(--bad)}
+.sr{position:absolute;left:-9999px}
+
+/* scan */
+.tabs{display:flex;gap:4px;padding:4px;background:var(--soft);border:2px solid var(--line);border-radius:999px}
+.tabs button{flex:1;border:0;background:transparent;color:var(--muted);padding:8px;font-weight:600;font-size:13px;border-radius:999px}
+.tabs button[aria-selected="true"]{background:var(--brand-deep);color:var(--on-brand)}
+.bags{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+.bagopt{position:relative;border:2px solid var(--line);border-radius:16px;padding:8px 12px 8px 8px;cursor:pointer;display:grid;grid-template-columns:60px minmax(0,1fr);align-items:center;gap:2px 12px;background:var(--soft)}
+.bagopt input{position:absolute;opacity:0;pointer-events:none}
+.bagopt svg{width:60px;height:60px;grid-row:span 3;background:var(--surface);border-radius:12px}
+.bagopt b{font-size:15px;line-height:1.2;font-weight:600}
+.bagopt .desc{font-size:13px;color:var(--ink);line-height:1.35}
+.bagopt small{font-size:12px;color:var(--muted)}
+.bagopt:has(input:checked){border-color:var(--brand-deep);background:var(--mint)}
+.bagopt:has(input:checked) small{color:var(--brand-deep);font-weight:600}
+.custom{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.custom input[type=number]{max-width:110px}
+.howto{background:var(--mint);border-radius:20px;padding:20px 18px 22px;display:flex;flex-direction:column;gap:18px}
+.howto h3{color:var(--brand-deep);font-size:12px}
+.howto ol{margin:0;padding:0;list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:20px}
+.howto li{counter-increment:s;position:relative;display:block;padding-left:44px;min-height:30px;font-size:14px;line-height:1.55;color:var(--muted)}
+.howto li::before{content:counter(s);position:absolute;left:0;top:1px;width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:14px;display:grid;place-items:center}
+.howto b{display:block;font-weight:600;font-size:15.5px;color:var(--ink);margin-bottom:2px}
+:root[data-theme="dark"] .howto h3{color:var(--brand-2)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .howto h3{color:var(--brand-2)}}
+.drop{position:relative;border:2px dashed var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;background:var(--soft)}
+.drop.has{border-style:solid;border-color:var(--brand-deep)}
+.drop img{max-height:160px;border-radius:10px;object-fit:contain}
+.drop .corners{width:40px;height:40px}
+.scanres{font-size:13.5px;padding:10px 12px;border-radius:12px;background:var(--mint)}
+.scanres strong{font-weight:700}
+.chosen{font-size:13px;color:var(--muted);margin:0}
+.chosen strong{color:var(--ink)}
+.itin-photo{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px}
+.itin-photo img{height:56px;border-radius:8px;border:2px solid var(--line)}
+.itin-photo .clear{border:0;background:none;color:var(--muted);text-decoration:underline;padding:0;font-size:12.5px}
+
+button{font:inherit;cursor:pointer}
+.go{background:var(--accent);color:var(--on-accent);border:0;border-radius:999px;font-family:var(--display);font-weight:600;font-size:16px;padding:14px 18px}
+.go:hover{background:var(--accent-deep)}
+.go:disabled{opacity:.6;cursor:progress}
+.ghost{background:var(--surface);border:2px solid var(--line);color:var(--ink);padding:7px 13px;font-size:13px;font-weight:600;border-radius:999px}
+.ghost:disabled{opacity:.5;cursor:default}
+
+/* pack */
+.res-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 16px;align-items:flex-start}
+.dest{font-family:var(--display);font-weight:700;font-size:clamp(22px,3.4vw,30px);line-height:1.15;margin:8px 0 4px;text-wrap:balance}
+.meta{font-size:13px;color:var(--muted)}
+.pill{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 10px;border-radius:999px;background:var(--bubble);color:var(--ink);border:2px solid var(--accent)}
+.unit{display:flex;gap:4px}
+.unit button[aria-pressed="true"]{background:var(--brand-deep);color:var(--on-brand);border-color:var(--brand-deep)}
+
+.voice{display:grid;grid-template-columns:48px minmax(0,1fr);gap:12px;align-items:start}
+.voice svg{width:48px;height:48px}
+.bubble{position:relative;background:var(--bubble);border:2px solid var(--accent);border-radius:4px 18px 18px 18px;padding:12px 14px;font-size:14.5px;min-width:0}
+.bubble p{margin:0}
+.bubble p+p{margin-top:6px}
+.bubble ul{margin:6px 0 0;padding-left:18px}
+.bubble.bad{border-color:var(--bad)}
+
+.wx{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 18px;padding:16px;border-radius:16px;background:var(--sky);color:var(--on-sky)}
+.wx h3{grid-column:1/-1;margin-bottom:4px;color:var(--sky-soft)}
+.temps{font-variant-numeric:tabular-nums;font-size:28px;font-weight:700;line-height:1.1;grid-row:span 2;display:flex;flex-direction:column}
+.temps small{font-size:11.5px;color:var(--sky-soft);font-weight:400}
+.wx p{margin:0;min-width:0}
+.wx .watch{font-size:13.5px;font-weight:600;color:#FFE2B0}
+.wxnote{font-size:12px;color:var(--sky-soft);grid-column:1/-1;margin-top:4px}
+
+.days{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.day{display:grid;grid-template-columns:64px minmax(0,1fr);gap:4px 14px;padding:10px;border-radius:14px;background:var(--soft)}
+.day .when{font-size:12px;color:var(--muted);line-height:1.3;text-align:center;background:var(--surface);border-radius:10px;padding:6px 4px;align-self:start}
+.day .when b{display:block;color:var(--brand-deep);font-size:13px}
+.day .t{font-weight:600}
+.day .p{font-size:13.5px;color:var(--muted)}
+.day .w{font-size:13.5px}
+.day .w span{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--on-accent);background:var(--accent);padding:1px 7px;border-radius:999px;margin-right:6px}
+
+.gauge{display:flex;flex-direction:column;gap:6px}
+.gtop{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.gtop strong{font-size:14px;font-weight:600}
+.verdict{font-weight:700}
+.verdict.good{color:var(--good)}.verdict.warn{color:var(--warn)}.verdict.bad{color:var(--bad)}
+.bar{position:relative;height:16px;border-radius:999px;background:var(--line);overflow:hidden}
+.fill{position:absolute;inset:0 auto 0 0;background:var(--brand);border-radius:999px;transition:width .4s ease}
+.fill.warn{background:var(--accent)}.fill.bad{background:var(--bad)}
+.ticks{display:none}
+.scale{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+
+.cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px 24px}
+.cat{display:flex;flex-direction:column;gap:6px;min-width:0}
+.cat ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.item{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:8px;align-items:start;padding:8px 4px;border-bottom:2px solid var(--line)}
+.item input{width:19px;height:19px;margin-top:2px;accent-color:var(--brand-deep)}
+.item label{font-weight:inherit;display:block;font-size:14.5px}
+.item .nm{font-weight:600}
+.item .nt{display:block;font-size:12.5px;color:var(--muted);font-weight:400}
+.item .vol{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.item.done .nm{text-decoration:line-through;color:var(--muted)}
+.item.new{background:var(--bubble);border-radius:8px}
+.item .flag{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--on-accent);background:var(--accent);padding:1px 6px;border-radius:999px;margin-left:6px}
+.item .flag.opt{color:var(--muted);background:var(--line)}
+.tips{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.foot{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:baseline}
+.progress{font-size:13px;font-weight:600;color:var(--brand-deep)}
+
+/* talk */
+.chat{display:flex;flex-direction:column;gap:12px;max-height:440px;overflow-y:auto;padding-right:2px}
+.chat:empty{display:none}
+.me{align-self:flex-end;max-width:85%;background:var(--brand-deep);color:var(--on-brand);padding:10px 14px;border-radius:18px 18px 4px 18px;font-size:14.5px;white-space:pre-wrap}
+.chg{display:block;margin-top:6px;font-size:12px;font-weight:600;color:var(--brand-deep)}
+:root[data-theme="dark"] .chg{color:var(--brand-2)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .chg{color:var(--brand-2)}}
+.talk form{display:flex;flex-direction:column;gap:8px}
+.talk .row{display:flex;gap:8px;flex-wrap:wrap}
+.talk .row .go{flex:1;font-size:15px;padding:12px 16px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{border:2px solid var(--line);background:var(--soft);color:var(--ink);font-size:12.5px;padding:6px 12px;border-radius:999px;text-align:left}
+.speak{display:inline-flex;align-items:center;gap:6px;margin-top:8px;border:2px solid var(--brand-deep);background:var(--surface);color:var(--brand-deep);font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:999px}
+.speak svg{width:15px;height:15px}
+.speak[aria-pressed="true"]{background:var(--brand-deep);color:var(--on-brand)}
+:root[data-theme="dark"] .speak:not([aria-pressed="true"]){color:var(--brand-2);border-color:var(--brand-2)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .speak:not([aria-pressed="true"]){color:var(--brand-2);border-color:var(--brand-2)}}
+.voicebar{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;background:var(--soft);border-radius:14px;padding:10px 12px}
+@media (prefers-reduced-motion:reduce){.fill,.step{transition:none}}
+</style>
+
+<header class="band"><div class="wrap">
+  <div class="lockup">
+    <svg class="mark" viewBox="0 0 120 120" aria-hidden="true">
+      <g fill="none" stroke="var(--accent)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 24V8h16"/><path d="M96 8h16v16"/><path d="M8 96v16h16"/><path d="M112 96v16H96"/>
+      </g>
+      <path d="M48 32V22a5 5 0 0 1 5-5h14a5 5 0 0 1 5 5v10" fill="none" stroke="#FFFFFF" stroke-width="7"/>
+      <rect x="31" y="30" width="58" height="68" rx="13" fill="#FFFFFF"/>
+      <rect x="40" y="97" width="10" height="7" rx="2" fill="var(--band-wise)"/>
+      <rect x="70" y="97" width="10" height="7" rx="2" fill="var(--band-wise)"/>
+      <path d="M46 64l10 10 19-21" fill="none" stroke="var(--band)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div>
+      <div class="brand" role="img" aria-label="PackWise">Pack<span>Wise</span></div>
+      <div class="motto">Scan. Plan. Pack.</div>
+    </div>
+  </div>
+  <div class="hero">
+    <p>Imagine if your suitcase could talk to you.</p>
+    <div class="what">Tell PackWise where you're going and it builds your packing list from the weather, checks that your bag fits, and talks you through packing.</div>
+    <div class="vet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></svg>Veteran owned and operated</div>
+    <small>Never guess what to pack again. Prototype v0.7</small>
+  </div>
+  <style>
+  .hero .what{font-size:14.5px;line-height:1.45;color:var(--on-band);margin-top:8px;max-width:60ch}
+  .hero .vet{display:inline-flex;align-items:center;gap:7px;margin-top:10px;padding:5px 12px 5px 9px;border-radius:999px;background:var(--accent);color:var(--on-accent);font-size:12px;font-weight:600;letter-spacing:.04em}
+  .hero .vet svg{width:15px;height:15px;fill:currentColor;flex:none}
+  </style>
+</div></header>
+
+<div class="wrap">
+  <div class="modes" role="tablist" aria-label="Trip mode">
+    <button type="button" role="tab" id="modeBiz" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3 12.5h18" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+      <span><b>Business</b><small>Meetings, pitches, conferences</small></span>
+    </button>
+    <button type="button" role="tab" id="modePlay" aria-selected="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <span><b>Pleasure</b><small>Vacations, weekends, events</small></span>
+    </button>
+  </div>
+  <nav class="steps" aria-label="How it works">
+    <div class="step" id="st1"><span class="n">1</span><div><b>SCAN</b><span>Size up your suitcase</span></div></div>
+    <div class="step" id="st2"><span class="n">2</span><div><b>PLAN</b><span>Itinerary, dates and past weather</span></div></div>
+    <div class="step" id="st3"><span class="n">3</span><div><b>PACK</b><span>Day-by-day list your suitcase talks you through</span></div></div>
+  </nav>
+</div>
+
+<main><div class="wrap">
+  <form class="col" id="tripForm" novalidate>
+    <section class="panel" aria-labelledby="scanH">
+      <div class="phead"><span class="k">SCAN</span><h2 id="scanH">How big is your bag?</h2></div>
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" id="tabPick" aria-selected="true" aria-controls="panePick">Pick a size</button>
+        <button type="button" role="tab" id="tabPhoto" aria-selected="false" aria-controls="panePhoto">Scan a photo</button>
+        <button type="button" role="tab" id="tabModel" aria-selected="false" aria-controls="paneModel">Brand &amp; model</button>
+      </div>
+
+      <div id="panePick" role="tabpanel" aria-labelledby="tabPick" style="display:flex;flex-direction:column;gap:10px">
+        <div class="bags" role="radiogroup" aria-label="Bag size">
+          <label class="bagopt"><input type="radio" name="bag" value="20" data-name="Backpack">
+            <svg viewBox="0 0 60 60" aria-hidden="true">
+              <path d="M24 13v-2a6 6 0 0 1 12 0v2" fill="none" stroke="var(--brand-deep)" stroke-width="3" stroke-linecap="round"/>
+              <rect x="17" y="13" width="26" height="36" rx="9" fill="var(--brand)"/>
+              <path d="M20 22q10-5 20 0" fill="none" stroke="var(--brand-2)" stroke-width="2.5" stroke-linecap="round"/>
+              <rect x="21" y="32" width="18" height="12" rx="4" fill="var(--accent)"/>
+              <path d="M24 36h12" stroke="var(--brand-deep)" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <b>Backpack</b><span class="desc">Standard school-size backpack. Fits under the seat.</span><small>About 20 liters</small></label>
+          <label class="bagopt"><input type="radio" name="bag" value="40" data-name="Carry-on" checked>
+            <svg viewBox="0 0 60 60" aria-hidden="true">
+              <path d="M26 15V7h8v8" fill="none" stroke="var(--brand-deep)" stroke-width="2.5" stroke-linejoin="round"/>
+              <rect x="19" y="15" width="22" height="31" rx="6" fill="var(--brand)"/>
+              <path d="M25 20v21M35 20v21" stroke="var(--brand-2)" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="24" cy="49" r="3" fill="var(--accent)"/><circle cx="36" cy="49" r="3" fill="var(--accent)"/>
+            </svg>
+            <b>Carry-on</b><span class="desc">Rolling bag that fits the overhead bin, about 22″ × 14″ × 9″.</span><small>About 40 liters</small></label>
+          <label class="bagopt"><input type="radio" name="bag" value="70" data-name="Medium checked bag">
+            <svg viewBox="0 0 60 60" aria-hidden="true">
+              <path d="M25 11a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v2" fill="none" stroke="var(--brand-deep)" stroke-width="2.5"/>
+              <rect x="16" y="12" width="28" height="37" rx="7" fill="var(--brand)"/>
+              <path d="M23 18v26M30 18v26M37 18v26" stroke="var(--brand-2)" stroke-width="2" stroke-linecap="round"/>
+              <rect x="16" y="27" width="28" height="4" fill="var(--accent)"/>
+              <circle cx="22" cy="52" r="3" fill="var(--accent)"/><circle cx="38" cy="52" r="3" fill="var(--accent)"/>
+            </svg>
+            <b>Medium checked</b><span class="desc">Checked bag for about a week, around 24–26″ tall.</span><small>About 70 liters</small></label>
+          <label class="bagopt"><input type="radio" name="bag" value="100" data-name="Large checked bag">
+            <svg viewBox="0 0 60 60" aria-hidden="true">
+              <path d="M25 7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v2" fill="none" stroke="var(--brand-deep)" stroke-width="2.5"/>
+              <rect x="13" y="8" width="34" height="44" rx="8" fill="var(--brand)"/>
+              <path d="M21 14v32M30 14v32M39 14v32" stroke="var(--brand-2)" stroke-width="2" stroke-linecap="round"/>
+              <path d="M13 17v-1a8 8 0 0 1 8-8h1M47 17v-1a8 8 0 0 0-8-8h-1M13 43v1a8 8 0 0 0 8 8h1M47 43v1a8 8 0 0 1-8 8h-1" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="20" cy="55" r="3" fill="var(--accent)"/><circle cx="40" cy="55" r="3" fill="var(--accent)"/>
+            </svg>
+            <b>Large checked</b><span class="desc">Big checked bag for two weeks or family trips, around 28–30″ tall.</span><small>About 100 liters</small></label>
+        </div>
+        <div class="custom">
+          <label class="check" for="useCustom"><input id="useCustom" type="checkbox"> Know the exact size?</label>
+          <input id="customL" type="number" min="5" max="200" step="1" placeholder="liters" aria-label="Bag size in liters">
+        </div>
+        <p class="hint">Liters are often listed on the bag's tag or product page. Not sure? Pick the closest picture above.</p>
+      </div>
+
+      <div id="panePhoto" role="tabpanel" aria-labelledby="tabPhoto" hidden style="flex-direction:column;gap:10px">
+        <div class="howto">
+          <h3>How to take the photo</h3>
+          <ol>
+            <li><b>Open your bag</b>So the scan can see how deep it is.</li>
+            <li><b>Set an everyday item beside it</b>A water bottle, credit card or soda can works as the ruler.</li>
+            <li><b>Step back and shoot straight on</b>Fit the whole bag and the item in the photo.</li>
+          </ol>
+        </div>
+        <div class="drop" id="drop">
+          <svg class="corners" viewBox="0 0 44 44" aria-hidden="true"><g fill="none" stroke="var(--accent)" stroke-width="3.5" stroke-linecap="round"><path d="M3 12V3h9M32 3h9v9M3 32v9h9M41 32v9h-9"/></g></svg>
+          <img id="preview" alt="Your suitcase photo" hidden>
+          <label for="photo">Photo of your suitcase
+            <input id="photo" type="file" accept="image/jpeg,image/png,image/webp">
+          </label>
+        </div>
+        <label for="refObj">Which item is next to your bag?
+          <select id="refObj">
+            <option value="a standard 16.9 oz (500 ml) plastic water bottle, about 8.5 in (21.6 cm) tall">Water bottle (16.9 oz / 500 ml)</option>
+            <option value="a standard credit card, 3.37 x 2.13 in (85.6 x 54 mm)">Credit card</option>
+            <option value="a sheet of US letter paper, 8.5 x 11 in">Sheet of letter paper</option>
+            <option value="a standard 12 oz soda can, about 4.8 in (12.2 cm) tall and 2.6 in (6.6 cm) wide">Soda can (12 oz)</option>
+          </select>
+        </label>
+        <p class="hint">The scan gives a close estimate. If your bag's tag lists its size, that's even better.</p>
+        <button type="button" class="ghost" id="scanBtn" disabled>Scan my suitcase</button>
+        <p class="status" id="scanStatus" role="status"></p>
+        <div class="scanres" id="scanRes" hidden></div>
+      </div>
+
+      <div id="paneModel" role="tabpanel" aria-labelledby="tabModel" hidden style="flex-direction:column;gap:10px">
+        <label for="modelName">Your suitcase's brand and model
+          <input id="modelName" placeholder="e.g. Away Bigger Carry-On" autocomplete="off">
+        </label>
+        <p class="hint">Usually printed on a tag inside the bag or on the handle. Add the size if you know it, like "Samsonite Freeform 21 inch".</p>
+        <button type="button" class="ghost" id="modelBtn">Look up my suitcase</button>
+        <p class="status" id="modelStatus" role="status"></p>
+        <div class="scanres" id="modelRes" hidden></div>
+      </div>
+      <p class="chosen" id="chosen"></p>
+    </section>
+
+    <section class="panel" aria-labelledby="planH">
+      <div class="phead"><span class="k">PLAN</span><h2 id="planH">Where are you headed?</h2></div>
+      <label for="dest">Destination
+        <input id="dest" placeholder="City, state or country" autocomplete="off" required>
+      </label>
+      <div class="row2">
+        <label for="start">Leave<input id="start" type="date" required></label>
+        <label for="end">Return<input id="end" type="date" required></label>
+      </div>
+      <label for="purpose">Trip type
+        <select id="purpose">
+          <option selected>Leisure / city</option>
+          <option>Outdoors / active</option>
+          <option>Beach</option>
+          <option>Wedding or event</option>
+        </select>
+      </label>
+      <label for="itin">Your itinerary <span class="hint">Paste it, or add a screenshot below. Optional.</span>
+        <textarea id="itin" rows="4" placeholder="Mon: fly out 7am, client dinner&#10;Tue–Wed: conference, hotel gym&#10;Thu: hike, fly home 6pm"></textarea>
+      </label>
+      <div class="itin-photo" id="itinPhotoRow">
+        <label for="itinPhoto" style="font-weight:600">Itinerary screenshot or photo
+          <input id="itinPhoto" type="file" accept="image/jpeg,image/png,image/webp">
+        </label>
+        <img id="itinPreview" alt="Itinerary screenshot" hidden>
+        <button type="button" class="clear" id="itinClear" hidden>Remove</button>
+      </div>
+      <label class="check" for="laundry"><input id="laundry" type="checkbox"> I can do laundry there</label>
+      <button class="go" id="goBtn" type="submit">Build my packing plan</button>
+      <p class="status" id="status" role="status"></p>
+    </section>
+  </form>
+
+  <div class="col">
+    <section class="panel" id="result" aria-live="polite" aria-label="Your packing plan"></section>
+    <section class="panel look" id="lookPanel" aria-labelledby="lookH">
+      <div class="phead"><span class="k">LOOK</span><h2 id="lookH">What to wear each day</h2></div>
+      <p class="hint">Add a photo of yourself and your suitcase picks colors that suit you, then plans an outfit for every day of the trip. No photo? It still plans outfits from your trip.</p>
+      <div class="lookup">
+        <label class="selfie" for="selfie">
+          <img id="selfiePrev" alt="Your photo" hidden>
+          <svg id="selfieIcon" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="18" r="8"/><path d="M9 42c1.5-9 7.5-13 15-13s13.5 4 15 13"/></svg>
+          <span id="selfieTxt">Add a photo of yourself</span>
+          <input id="selfie" type="file" accept="image/*">
+        </label>
+        <div class="lookgo">
+          <button class="go" id="lookBtn" type="button">Plan my outfits</button>
+          <button class="ghost" id="selfieClear" type="button" hidden>Remove photo</button>
+          <p class="hint">Your photo is only used for this one request. It isn't saved.</p>
+        </div>
+      </div>
+      <p class="status" id="lookStatus" role="status"></p>
+      <div id="lookOut"></div>
+      <div class="soon">
+        <svg viewBox="0 0 80 110" aria-hidden="true"><circle cx="40" cy="20" r="11"/><path d="M22 40q18-8 36 0l6 34h-9l-1 32H26l-1-32h-9z"/><path class="spark" d="M64 8l2.5 6 6 2.5-6 2.5L64 25l-2.5-6-6-2.5 6-2.5z"/></svg>
+        <div>
+          <span class="pill">Coming soon · Premium</span>
+          <h3 class="soonh">See it on you</h3>
+          <p class="hint">Soon PackWise will show you in each outfit, using your photo, with links to buy any piece you don't own yet.</p>
+        </div>
+      </div>
+    </section>
+    <section class="panel talk" id="talkPanel" aria-labelledby="talkH">
+      <div class="phead"><span class="k">TALK</span><h2 id="talkH">Tell your suitcase more</h2></div>
+      <p class="hint">Add anything the itinerary doesn't show, or ask a question. Your suitcase updates the list as you go. <strong>To talk:</strong> tap the box, tap the microphone on your keyboard and speak. When you stop, it sends on its own and the suitcase answers out loud.</p>
+      <div class="voicebar" id="voicebar">
+        <label class="check" for="autoSpeak"><input id="autoSpeak" type="checkbox" checked> Talk back out loud</label>
+        <label class="check" for="autoSend"><input id="autoSend" type="checkbox" checked> Send when I stop talking</label>
+        <label for="voiceSel" style="flex:1 1 220px">Suitcase voice
+          <select id="voiceSel"></select>
+        </label>
+        <p class="hint" id="voiceTip" style="flex-basis:100%">Turn your sound on and flip off silent mode. For a more natural voice on iPhone, go to Settings › Accessibility › Spoken Content › Voices › English, download a voice marked Enhanced or Premium, then reload this page.</p>
+      </div>
+      <div class="chat" id="chat" aria-live="polite"></div>
+      <div class="chips" id="chips">
+        <button type="button">The hotel has a pool and a gym.</button>
+        <button type="button">I'm going to a nice dinner on the second night.</button>
+        <button type="button">What can I leave out to save space?</button>
+      </div>
+      <form id="talkForm">
+        <label for="q" class="sr">Message to your suitcase</label>
+        <textarea id="q" rows="2" placeholder="e.g. my friend says it gets windy at night"></textarea>
+        <div class="row"><button class="go" id="talkBtn" type="submit">Send</button><button type="button" class="ghost" id="stopBtn" hidden>Stop</button></div>
+      </form>
+      <p class="status" id="talkStatus" role="status"></p>
+    </section>
+  </div>
+</div></main>
+<style>
+:root{--edge:rgba(29,42,40,.45);--rack:#F3ECDD}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--edge:rgba(237,242,240,.55);--rack:#141D1A}}
+:root[data-theme="dark"]{--edge:rgba(237,242,240,.55);--rack:#141D1A}
+.look .phead .k{background:var(--sky);color:var(--on-sky)}
+.lookup{display:grid;grid-template-columns:120px minmax(0,1fr);gap:14px;align-items:center}
+.selfie{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:120px;height:120px;border:2px dashed var(--line);border-radius:18px;background:var(--soft);cursor:pointer;text-align:center;font-size:12px;font-weight:600;color:var(--muted);padding:8px;overflow:hidden}
+.selfie:focus-within{outline:3px solid var(--accent);outline-offset:2px}
+.selfie input{position:absolute;opacity:0;width:1px;height:1px}
+.selfie svg{width:40px;height:40px;fill:none;stroke:var(--brand-deep);stroke-width:3;stroke-linecap:round}
+.selfie img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.selfie img:not([hidden])~span{position:relative;margin-top:auto;background:var(--surface);color:var(--ink);padding:2px 8px;border-radius:999px}
+.lookgo{display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-width:0}
+.lookgo .hint{margin:0}
+#lookOut{display:flex;flex-direction:column;gap:14px}
+#lookOut:empty{display:none}
+.pal{display:flex;flex-direction:column;gap:8px}
+.chipset{display:flex;flex-wrap:wrap;gap:6px}
+.sw{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:4px 10px 4px 5px;border-radius:999px;background:var(--soft);border:2px solid var(--line)}
+.sw i,.ofit li i{width:16px;height:16px;border-radius:50%;flex:none;box-shadow:0 0 0 1.5px var(--edge) inset}
+.ofhead{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.ofits{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.ofit{display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:16px;background:var(--rack);min-width:0}
+.ofday{display:flex;flex-direction:column;line-height:1.3}
+.ofday b{font-size:12px;color:var(--brand-deep);letter-spacing:.04em}
+.ofday span{font-size:13px;font-weight:600}
+.ofit svg{width:100%;max-width:120px;height:auto;align-self:center}
+.ofit ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
+.ofit li{display:flex;align-items:flex-start;gap:6px;font-size:12.5px;line-height:1.3}
+.ofit li i{width:12px;height:12px;margin-top:2px}
+.soon{display:grid;grid-template-columns:64px minmax(0,1fr);gap:14px;align-items:center;padding:14px;border-radius:16px;border:2px dashed var(--sky);background:var(--sky-soft);color:#1D2A28}
+.soon svg{width:64px;height:88px}
+.soon svg circle,.soon svg path{fill:var(--sky);opacity:.55}
+.soon svg .spark{fill:var(--accent);opacity:1}
+.soon .soonh{font-size:16px;letter-spacing:0;text-transform:none;color:#1D2A28;margin:6px 0 2px;font-weight:700}
+.soon .hint{color:#3B4A47;margin:0}
+.soon .pill{background:var(--surface);color:var(--ink)}
+:root[data-theme="dark"] .ofday b{color:var(--brand-2)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .ofday b{color:var(--brand-2)}}
+@media (max-width:420px){.lookup{grid-template-columns:96px minmax(0,1fr)}.selfie{width:96px;height:96px}}
+.fb{background:var(--bubble);box-shadow:0 0 0 2px var(--accent) inset}
+.fb .phead .k{background:var(--accent);color:var(--on-accent)}
+</style>
+
+
+<script>
+(function(){
+const $ = s => document.querySelector(s);
+const CATS = ["Clothing","Weather gear","Toiletries","Tech","Documents","Often forgotten","Other"];
+const store = {
+  get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+};
+const SUITCASE = `<svg viewBox="0 0 120 120" aria-hidden="true"><path d="M48 32V22a5 5 0 0 1 5-5h14a5 5 0 0 1 5 5v10" fill="none" stroke="var(--brand)" stroke-width="7"/><rect x="31" y="30" width="58" height="68" rx="13" fill="var(--brand)"/><rect x="40" y="97" width="10" height="7" rx="2" fill="var(--brand-deep)"/><rect x="70" y="97" width="10" height="7" rx="2" fill="var(--brand-deep)"/><path d="M43 39v50M77 39v50" stroke="var(--brand-2)" stroke-width="2.5" stroke-linecap="round"/><circle cx="52" cy="58" r="3.5" fill="#fff"/><circle cx="68" cy="58" r="3.5" fill="#fff"/><path d="M51 71q9 7 18 0" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/></svg>`;
+
+/* ---------- example shown on first load (clearly marked) ---------- */
+const EXAMPLE = {
+  example:true,
+  trip:{dest:"Park City, Utah",start:"2027-04-08",end:"2027-04-12",nights:4,purpose:"Leisure / city",itinerary:"Thu: fly into SLC, drive up. Fri: Main Street + dinner. Sat: ski day. Sun: snowshoe, spa. Mon: fly home.",laundry:false,bagName:"Carry-on",bagL:40},
+  weather:{summary:"In past years, early-to-mid April in Park City has meant cool, sunny days, freezing nights, and the occasional late-season snowstorm.",highF:50,lowF:26,highC:10,lowC:-3,wetDays:"Usually 1 or 2 of these 5 days see rain or snow",watchFor:"Late-season snow at elevation"},
+  days:[
+    {date:"2027-04-08",title:"Travel day",plans:"Fly into Salt Lake City, drive up to Park City.",wear:"Insulated jacket and boots on the plane."},
+    {date:"2027-04-09",title:"Main Street and dinner",plans:"Walk around town, nicer dinner out.",wear:"Jeans, long-sleeve layer; dinner outfit at night."},
+    {date:"2027-04-10",title:"Ski day",plans:"Full day on the mountain.",wear:"Base layers, shell, beanie, gloves, sunscreen."},
+    {date:"2027-04-11",title:"Snowshoe and spa",plans:"Morning snowshoe, afternoon spa.",wear:"Warm socks, boots; swimsuit for the spa."},
+    {date:"2027-04-12",title:"Fly home",plans:"Check out, drive to SLC.",wear:"Same travel outfit as day one."}
+  ],
+  items:[
+    {name:"T-shirts / base tops",category:"Clothing",qty:4,liters:0.6,essential:true},
+    {name:"Long-sleeve layer",category:"Clothing",qty:2,liters:1,essential:true},
+    {name:"Jeans or travel pants",category:"Clothing",qty:2,liters:1.6,essential:true},
+    {name:"Thermal base layer set",category:"Clothing",qty:1,liters:1,essential:true,note:"For the ski day"},
+    {name:"Underwear",category:"Clothing",qty:5,liters:0.15,essential:true},
+    {name:"Warm socks",category:"Clothing",qty:5,liters:0.2,essential:true},
+    {name:"Swimsuit",category:"Clothing",qty:1,liters:0.3,essential:false,note:"Spa on Sunday"},
+    {name:"Nicer outfit for dinner",category:"Clothing",qty:1,liters:2,essential:false},
+    {name:"Insulated jacket",category:"Weather gear",qty:1,liters:6,essential:true,wear:true,note:"Wear it on the plane"},
+    {name:"Waterproof shell",category:"Weather gear",qty:1,liters:2,essential:true},
+    {name:"Beanie and gloves",category:"Weather gear",qty:1,liters:0.8,essential:true},
+    {name:"Waterproof boots",category:"Weather gear",qty:1,liters:5,essential:true,wear:true,note:"Wear on travel day"},
+    {name:"Toiletry bag (3-1-1 liquids)",category:"Toiletries",qty:1,liters:2,essential:true},
+    {name:"Lip balm and moisturizer",category:"Toiletries",qty:1,liters:0.2,essential:true,note:"Utah air is very dry"},
+    {name:"Sunscreen",category:"Toiletries",qty:1,liters:0.2,essential:true,note:"Sun on snow burns fast"},
+    {name:"Phone charger and cable",category:"Tech",qty:1,liters:0.3,essential:true},
+    {name:"ID and boarding pass",category:"Documents",qty:1,liters:0.1,essential:true},
+    {name:"Razor",category:"Often forgotten",qty:1,liters:0.2,essential:true},
+    {name:"Toothbrush",category:"Often forgotten",qty:1,liters:0.1,essential:true},
+    {name:"Prescription medications",category:"Often forgotten",qty:1,liters:0.3,essential:true},
+    {name:"Sunglasses",category:"Often forgotten",qty:1,liters:0.3,essential:true}
+  ],
+  tips:["Roll base layers and stuff socks inside your boots.","Wear the jacket and boots on the plane. They are your two bulkiest items."],
+  chat:[]
+};
+
+/* ---------- simple rules, used only if Claude isn't available ---------- */
+function fallbackList(t){
+  const n = Math.max(1,t.nights), days = n+1;
+  const c = t.laundry ? Math.min(days,4) : Math.min(days,8);
+  const it = [
+    ["Tops","Clothing",c,0.6,true],["Pants / shorts","Clothing",Math.max(1,Math.ceil(c/3)),1.6,true],
+    ["Underwear","Clothing",c+1,0.15,true],["Socks","Clothing",c+1,0.15,true],["Sleepwear","Clothing",1,0.8,false],
+    ["Light jacket or layer","Weather gear",1,2,true],["Compact umbrella","Weather gear",1,0.5,false],
+    ["Toiletry bag (3-1-1 liquids)","Toiletries",1,2,true],["Phone charger and cable","Tech",1,0.3,true],
+    ["ID and travel documents","Documents",1,0.1,true],["Razor","Often forgotten",1,0.2,true],["Toothbrush","Often forgotten",1,0.1,true],
+    ["Prescription medications","Often forgotten",1,0.3,true],["Sunglasses","Often forgotten",1,0.3,false]
+  ];
+  if(t.mode==="business"||/Business/.test(t.purpose)) it.push(["Work outfit","Clothing",Math.min(n,4),1.5,true],["Laptop and charger","Tech",1,2,true]);
+  if(/Outdoors/.test(t.purpose)) it.push(["Hiking shoes","Clothing",1,5,true],["Water bottle","Other",1,0.8,true]);
+  if(/Beach/.test(t.purpose)) it.push(["Swimsuit","Clothing",2,0.3,true],["Sunscreen","Toiletries",1,0.2,true],["Sandals","Clothing",1,1.5,false]);
+  if(/Wedding/.test(t.purpose)) it.push(["Event outfit","Clothing",1,3,true],["Dress shoes","Clothing",1,4,true]);
+  return {
+    weather:null, days:[],
+    items:it.map(([name,category,qty,liters,essential])=>({name,category,qty,liters,essential})),
+    tips:["This is a basic list. Weather and itinerary-aware plans need the AI helper, which wasn't reachable just now."]
+  };
+}
+
+/* ---------- state ---------- */
+const EXAMPLE_BIZ = {
+  example:true,
+  trip:{mode:"business",dest:"Chicago, Illinois",start:"2027-03-09",end:"2027-03-11",nights:2,purpose:"Client meetings / pitch",itinerary:"Tue: fly in, client dinner. Wed: 10am pitch, team lunch. Thu: follow-up meetings, fly home 5pm.",laundry:false,bagName:"Carry-on",bagL:40},
+  weather:{summary:"In past years, early March in Chicago has been cold and gray, with a sharp wind off the lake that makes it feel colder than the thermometer says.",highF:42,lowF:28,highC:6,lowC:-2,wetDays:"Usually 1 of these 3 days sees rain or snow",watchFor:"Cold wind off the lake"},
+  days:[
+    {date:"2027-03-09",title:"Fly in + client dinner",plans:"Land midday, check in, dinner with the client team.",wear:"Navy blazer, white shirt, dark jeans.",tip:"Navy tends to read as calm and trustworthy, a solid first impression."},
+    {date:"2027-03-10",title:"The pitch",plans:"10am pitch, then lunch with the team.",wear:"Charcoal suit, light blue shirt, dress shoes.",tip:"Light blue usually comes across as approachable. Keep accessories simple so the focus stays on you."},
+    {date:"2027-03-11",title:"Follow-ups, fly home",plans:"Morning meetings, airport by 3pm.",wear:"Navy blazer again with a knit polo.",tip:"Rewear the blazer. A fresh shirt is enough to look new."}
+  ],
+  items:[
+    {name:"Charcoal suit",category:"Clothing",qty:1,liters:4,essential:true,note:"For the pitch"},
+    {name:"Navy blazer",category:"Clothing",qty:1,liters:3,essential:true,wear:true,note:"Wear it on the plane"},
+    {name:"Dress shirts",category:"Clothing",qty:2,liters:1,essential:true,note:"White and light blue"},
+    {name:"Knit polo",category:"Clothing",qty:1,liters:0.6,essential:true},
+    {name:"Dark jeans",category:"Clothing",qty:1,liters:1.6,essential:true,wear:true},
+    {name:"Undershirts",category:"Clothing",qty:3,liters:0.3,essential:true},
+    {name:"Underwear",category:"Clothing",qty:3,liters:0.15,essential:true},
+    {name:"Dress socks",category:"Clothing",qty:3,liters:0.1,essential:true},
+    {name:"Leather dress shoes",category:"Clothing",qty:1,liters:4,essential:true},
+    {name:"Belt",category:"Clothing",qty:1,liters:0.3,essential:true},
+    {name:"Wool overcoat",category:"Weather gear",qty:1,liters:7,essential:true,wear:true,note:"Lake wind is no joke"},
+    {name:"Gloves",category:"Weather gear",qty:1,liters:0.4,essential:false},
+    {name:"Wrinkle-release spray",category:"Toiletries",qty:1,liters:0.2,essential:false,note:"Hotel irons vary"},
+    {name:"Toiletry bag (3-1-1 liquids)",category:"Toiletries",qty:1,liters:2,essential:true},
+    {name:"Laptop and charger",category:"Tech",qty:1,liters:2,essential:true},
+    {name:"Phone charger and cable",category:"Tech",qty:1,liters:0.3,essential:true},
+    {name:"Presentation clicker",category:"Tech",qty:1,liters:0.1,essential:false},
+    {name:"Business cards",category:"Documents",qty:1,liters:0.05,essential:true},
+    {name:"ID and boarding pass",category:"Documents",qty:1,liters:0.1,essential:true},
+    {name:"Razor",category:"Often forgotten",qty:1,liters:0.2,essential:true},
+    {name:"Toothbrush",category:"Often forgotten",qty:1,liters:0.1,essential:true},
+    {name:"Prescription medications",category:"Often forgotten",qty:1,liters:0.3,essential:true}
+  ],
+  tips:["Fold the suit jacket inside out, then in half, to keep creases off the front.","Wear the overcoat and blazer on the plane. They're your bulkiest pieces."],
+  chat:[]
+};
+const PURPOSES={
+  business:["Client meetings / pitch","Conference or trade show","Office or team visit","Work trip with some free time"],
+  pleasure:["Leisure / city","Outdoors / active","Beach","Wedding or event"]
+};
+const CHIPS={
+  business:["I'm pitching to a big client on the second day.","The dress code is business casual.","What should I wear to close the deal?"],
+  pleasure:["The hotel has a pool and a gym.","I'm going to a nice dinner on the second night.","What can I leave out to save space?"]
+};
+let tripMode = store.get("pw-mode")==="business"?"business":"pleasure";
+let state = store.get("pw-state3") || (tripMode==="business"?EXAMPLE_BIZ:EXAMPLE);
+if(!state.chat) state.chat=[];
+if(!state.days) state.days=[];
+let unit = store.get("pw-unit") || "F";
+let scanned = null;
+let justChanged = new Set();
+
+function save(){ if(!state.example) store.set("pw-state3",state) }
+function key(t){return "pw-chk3-"+[t.dest,t.start,t.end].join("|")}
+function norm(s){return String(s||"").trim().toLowerCase()}
+function nightsBetween(a,b){return Math.round((new Date(b)-new Date(a))/86400000)}
+function fmtDate(s){const d=new Date(s+"T12:00:00");return isNaN(d)?s:d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})}
+function fmtDay(s){const d=new Date(s+"T12:00:00");return isNaN(d)?{dow:"",md:s}:{dow:d.toLocaleDateString(undefined,{weekday:"short"}),md:d.toLocaleDateString(undefined,{month:"short",day:"numeric"})}}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function vol(i){return i.wear?0:(Number(i.qty)||1)*(Number(i.liters)||0)}
+function cleanItem(i){return {name:String(i.name).trim(),category:CATS.includes(i.category)?i.category:"Other",qty:Math.max(1,Math.round(Number(i.qty)||1)),liters:Math.max(0,Number(i.liters)||0),essential:i.essential!==false,wear:!!i.wear,note:i.note?String(i.note):""}}
+function cleanDays(d){return Array.isArray(d)?d.filter(x=>x&&(x.title||x.plans)).map(x=>({date:String(x.date||""),title:String(x.title||""),plans:String(x.plans||""),wear:String(x.wear||""),tip:String(x.tip||"")})):[]}
+
+/* ---------- bag choice ---------- */
+let mode="pick", looked=null;
+function pending(){ return (mode==="photo"&&!scanned)||(mode==="model"&&!looked) }
+function currentBag(){
+  if(mode==="photo" && scanned) return {bagName:"Your scanned bag",bagL:scanned.liters};
+  if(mode==="model" && looked) return {bagName:looked.name,bagL:looked.liters};
+  const custom=Number($("#customL").value);
+  if($("#useCustom").checked && custom>=5) return {bagName:"Your bag",bagL:Math.round(custom)};
+  const r=document.querySelector('input[name="bag"]:checked');
+  return {bagName:r.dataset.name,bagL:Number(r.value)};
+}
+function showChosen(){
+  const b=currentBag();
+  $("#chosen").innerHTML = pending() ? (mode==="photo"?"Scan a photo, or switch back to pick a size.":"Look up your suitcase, or switch back to pick a size.") : `Planning for: <strong>${esc(b.bagName)} · ${b.bagL} L</strong>`;
+  $("#st1").className="step "+(pending()?"on":"done");
+}
+function setTab(m){
+  mode=m;
+  [["pick","#tabPick","#panePick"],["photo","#tabPhoto","#panePhoto"],["model","#tabModel","#paneModel"]].forEach(([k,t,p])=>{
+    $(t).setAttribute("aria-selected",k===m); $(p).hidden=k!==m; $(p).style.display=k===m?"flex":"";
+  });
+  showChosen();
+}
+$("#tabPick").onclick=()=>setTab("pick");
+$("#tabPhoto").onclick=()=>setTab("photo");
+$("#tabModel").onclick=()=>setTab("model");
+document.querySelectorAll('input[name="bag"]').forEach(r=>r.addEventListener("change",()=>{$("#useCustom").checked=false;showChosen()}));
+$("#customL").addEventListener("input",()=>{$("#useCustom").checked=!!$("#customL").value;showChosen()});
+$("#useCustom").addEventListener("change",showChosen);
+
+/* ---------- render pack panel ---------- */
+function suitcaseSays(s,total,usable){
+  const t=s.trip, free=usable-total, w=s.weather;
+  let cls="", lines=[];
+  if(total>usable){
+    cls="bad";
+    let need=total-usable, drops=[];
+    [...s.items].filter(i=>!i.essential&&!i.wear).sort((a,b)=>vol(b)-vol(a)).forEach(i=>{if(need>0){drops.push(i);need-=vol(i)}});
+    lines.push(`<p><strong>I can't close with all this.</strong> You're about ${(total-usable).toFixed(1)} L over.</p>`);
+    if(drops.length) lines.push(`<p>Leave these behind and I'll zip:</p><ul>${drops.map(d=>`<li>${esc(d.name)} (${vol(d).toFixed(1)} L)</li>`).join("")}</ul>`);
+    if(need>0) lines.push(`<p>${drops.length?"Even then it's tight. ":""}A bigger bag or a mid-trip laundry run would fix it.</p>`);
+  } else if(free<usable*0.15){
+    lines.push(`<p><strong>I'll close, but only just.</strong> About ${free.toFixed(1)} L to spare, so pack the heavy stuff at the wheels.</p>`);
+  } else {
+    lines.push(`<p><strong>Everything fits.</strong> I still have about ${free.toFixed(1)} L free, so there's room for a souvenir.</p>`);
+  }
+  const counts=s.items.filter(i=>i.category==="Clothing"&&i.qty>2).slice(0,3).map(i=>`${i.qty} ${i.name.toLowerCase()}`);
+  if(counts.length) lines.push(`<p>For ${t.nights} night${t.nights===1?"":"s"}, that's ${esc(counts.join(", "))}.</p>`);
+  if(w&&w.watchFor) lines.push(`<p>Heads up: in past years, ${esc(w.watchFor.charAt(0).toLowerCase()+w.watchFor.slice(1))} has been the thing to watch on these dates.</p>`);
+  const forgot=s.items.filter(i=>i.category==="Often forgotten").map(i=>i.name.toLowerCase());
+  const tipDay=t.mode==="business"&&(s.days||[]).find(d=>d.tip&&/pitch|present|client|interview|meeting|deal/i.test(d.title+" "+d.plans));
+  if(tipDay) lines.push(`<p>For ${esc(tipDay.title.toLowerCase())}: ${esc(tipDay.tip.charAt(0).toLowerCase()+tipDay.tip.slice(1))}</p>`);
+  if(forgot.length) lines.push(`<p>And don't forget your ${esc(forgot.slice(0,3).join(", "))}.</p>`);
+  return `<div class="voice">${SUITCASE}<div class="bubble ${cls}">${lines.join("")}${speakBtn("summary")}</div></div>`;
+}
+
+function render(){
+  const s = state, t = s.trip, el = $("#result");
+  const checked = store.get(key(t)) || {};
+  const usable = t.bagL*0.85;  // bags never pack to 100% of their stated volume
+  const total = s.items.reduce((a,i)=>a+vol(i),0);
+  const pct = Math.min(100, total/t.bagL*100);
+  let cls="good", verdict="Fits with room to spare";
+  if(total>usable*0.85){cls="warn";verdict="Fits, but it's snug"}
+  if(total>usable){cls="bad";verdict="Won't fit as planned"}
+
+  const w = s.weather;
+  const deg = (f,c)=>unit==="F"?Math.round(f)+"°":Math.round(c)+"°";
+  const range = `${fmtDay(t.start).md} to ${fmtDay(t.end).md}`;
+  const wxHtml = w ? `<div class="wx">
+      <h3>Past years, ${esc(range)}</h3>
+      <div class="temps">${deg(w.highF,w.highC)}<small>avg high</small>${deg(w.lowF,w.lowC)}<small>avg low</small></div>
+      <p>${esc(w.summary)}</p>
+      <p class="watch">${w.wetDays?esc(w.wetDays):""}</p>
+      <p class="wxnote">Based on what these dates have typically been like over past years, not a forecast. It can't say which day it will rain, so check a live forecast a few days before you leave.</p>
+    </div>` : `<div class="wx"><p class="wxnote" style="margin:0">No weather history for this plan.</p></div>`;
+
+  const daysHtml = s.days&&s.days.length ? `<div class="cat"><h2>Day by day</h2><ol class="days">${s.days.map(d=>{const f=fmtDay(d.date);return `
+      <li class="day"><div class="when"><b>${esc(f.dow)}</b>${esc(f.md)}</div>
+        <div><div class="t">${esc(d.title)}</div>${d.plans?`<div class="p">${esc(d.plans)}</div>`:""}${d.wear?`<div class="w"><span>Wear</span>${esc(d.wear)}</div>`:""}${d.tip?`<div class="tip"><span>${t.mode==="business"?"Style tip":"Tip"}</span>${esc(d.tip)}</div>`:""}</div></li>`}).join("")}</ol></div>` : "";
+
+  const done = s.items.filter(i=>checked[norm(i.name)]).length;
+  const byCat = {};
+  s.items.forEach((i,ix)=>{(byCat[i.category]=byCat[i.category]||[]).push([i,ix])});
+
+  el.innerHTML = `
+    <div class="res-head">
+      <div style="min-width:0">
+        <div class="phead"><span class="k">PACK</span>${s.example?'<span class="pill ex">Example trip</span>':'<h3>Your plan</h3>'}</div>
+        <p class="dest">${esc(t.dest)}</p>
+        <div class="meta">${fmtDate(t.start)} → ${fmtDate(t.end)} · ${t.nights} night${t.nights===1?"":"s"} · ${esc(t.purpose)}</div>
+      </div>
+      <div class="unit" role="group" aria-label="Temperature unit">
+        <button type="button" class="ghost" data-unit="F" aria-pressed="${unit==="F"}">°F</button>
+        <button type="button" class="ghost" data-unit="C" aria-pressed="${unit==="C"}">°C</button>
+      </div>
+    </div>
+    ${suitcaseSays(s,total,usable)}
+    ${wxHtml}
+    ${daysHtml}
+    <div class="gauge">
+      <div class="gtop"><span class="verdict ${cls}">${verdict}</span><strong>${total.toFixed(1)} L packed / ${t.bagL} L ${esc(t.bagName.toLowerCase())}</strong></div>
+      <div class="bar" role="img" aria-label="Bag ${Math.round(pct)} percent full"><div class="fill ${cls==="good"?"":cls}" style="width:${pct}%"></div><div class="ticks"></div></div>
+      <div class="scale"><span>0 L</span><span>${Math.round(t.bagL/2)} L</span><span>${t.bagL} L</span></div>
+      <p class="hint">Volumes are rough estimates for folded or rolled items. Items marked "wear" go on you for the trip and take no bag space.</p>
+    </div>
+    <div class="foot"><h2>Packing checklist</h2><span class="progress">${done} of ${s.items.length} packed</span></div>
+    <div class="cats">${CATS.filter(c=>byCat[c]).map(c=>`
+      <div class="cat"><h3>${c}</h3><ul>${byCat[c].map(([i,ix])=>{const k=norm(i.name);return `
+        <li class="item ${checked[k]?"done":""} ${justChanged.has(k)?"new":""}">
+          <input type="checkbox" id="it${ix}" data-k="${esc(k)}" ${checked[k]?"checked":""}>
+          <label for="it${ix}"><span class="nm">${i.qty>1?i.qty+" × ":""}${esc(i.name)}</span>${i.wear?'<span class="flag">wear</span>':""}${!i.essential?'<span class="flag opt">optional</span>':""}${i.note?`<span class="nt">${esc(i.note)}</span>`:""}</label>
+          <span class="vol">${i.wear?"—":vol(i).toFixed(1)+" L"}</span>
+        </li>`}).join("")}</ul></div>`).join("")}
+    </div>
+    ${s.tips&&s.tips.length?`<div class="cat"><h3>Packing tips</h3><ul class="tips">${s.tips.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}
+  `;
+  $("#st2").className="step "+(s.example?"on":"done");
+  $("#st3").className="step "+(done===s.items.length&&!s.example?"done":"on");
+  renderLook();
+}
+
+/* ---------- talk-back voice ---------- */
+const TTS = ("speechSynthesis" in window) && typeof SpeechSynthesisUtterance!=="undefined";
+const SPK = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+let speakingId=null, pickedVoice=null;
+// Rank voices by how natural they sound: Premium > Enhanced/Neural/Natural > known good defaults > the rest.
+// Novelty voices (Bubbles, Zarvox, etc.) are ranked last.
+const NOVELTY=/albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|fred|junior|ralph|kathy|grandma|grandpa|rocko|shelley|sandy|reed|eddy|flo/i;
+function voiceScore(v){
+  const id=(v.name+" "+v.voiceURI).toLowerCase(); let s=0;
+  if(/premium/.test(id)) s+=60;
+  if(/enhanced|neural|natural|siri/.test(id)) s+=45;
+  if(/online/.test(id)) s+=20;
+  if(/ava|zoe|evan|nathan|samantha|allison|aria|jenny|guy|google us english/.test(id)) s+=12;
+  if(v.lang==="en-US"||v.lang==="en_US") s+=6;
+  if(v.localService===false) s+=3;
+  if(NOVELTY.test(v.name)) s-=100;
+  return s;
+}
+function englishVoices(){ return TTS?speechSynthesis.getVoices().filter(v=>/^en[-_]/i.test(v.lang)||v.lang==="en").sort((a,b)=>voiceScore(b)-voiceScore(a)):[] }
+function voiceLabel(v){ const id=(v.name+" "+v.voiceURI).toLowerCase(); const tier=/premium/.test(id)?" · Premium":/enhanced|neural|natural/.test(id)?" · Enhanced":""; return v.name.replace(/\s*\((enhanced|premium)\)/i,"")+tier+" ("+v.lang+")" }
+function pickVoice(){
+  const vs=englishVoices(); if(!vs.length) return null;
+  let saved=null; try{saved=localStorage.getItem("pw-voice")}catch(e){}
+  return vs.find(v=>v.voiceURI===saved)||vs[0];
+}
+function fillVoices(){
+  const vs=englishVoices(), sel=$("#voiceSel");
+  if(!vs.length){ sel.closest("label").hidden=true; return }
+  sel.closest("label").hidden=false;
+  pickedVoice=pickVoice();
+  sel.innerHTML=vs.filter(v=>!NOVELTY.test(v.name)).slice(0,25).map((v,i)=>`<option value="${esc(v.voiceURI)}" ${pickedVoice&&v.voiceURI===pickedVoice.voiceURI?"selected":""}>${esc(voiceLabel(v))}${i===0?" — most natural":""}</option>`).join("");
+  const best=vs[0], natural=voiceScore(best)>=45;
+  $("#voiceTip").hidden=natural; // hide the download tip once a good voice exists
+}
+if(TTS){
+  fillVoices(); speechSynthesis.onvoiceschanged=fillVoices; setTimeout(fillVoices,800);
+  $("#voiceSel").addEventListener("change",e=>{
+    try{localStorage.setItem("pw-voice",e.target.value)}catch(err){}
+    pickedVoice=englishVoices().find(v=>v.voiceURI===e.target.value)||pickedVoice;
+    speak("Hi, I'm your suitcase. This is how I'll sound.","preview");
+  });
+}
+function speakBtn(id,label){return TTS?`<button type="button" class="speak" data-say="${id}" aria-pressed="${speakingId===id}">${SPK}${speakingId===id?"Stop":label||"Hear it"}</button>`:""}
+function stopSpeaking(){ if(TTS) speechSynthesis.cancel(); speakingId=null; refreshSpeakBtns() }
+function refreshSpeakBtns(){ document.querySelectorAll(".speak").forEach(b=>{const on=b.dataset.say===speakingId; b.setAttribute("aria-pressed",on); b.lastChild.textContent=on?"Stop":(b.dataset.label||"Hear it")}) }
+function speak(text,id){
+  if(!TTS||!text) return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text.replace(/\s+/g," ").trim());
+  if(pickedVoice) u.voice=pickedVoice;
+  u.rate=1; u.pitch=1;
+  u.onend=u.onerror=()=>{ if(speakingId===id){speakingId=null; refreshSpeakBtns()} };
+  speakingId=id; refreshSpeakBtns();
+  speechSynthesis.speak(u);
+}
+function unlockSpeech(){ // iPhones only allow speech that starts from a tap, so prime it on Send
+  if(!TTS) return; try{const u=new SpeechSynthesisUtterance(" ");u.volume=0;speechSynthesis.speak(u)}catch(e){}
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest(".speak"); if(!b) return;
+  const id=b.dataset.say;
+  if(speakingId===id){stopSpeaking();return}
+  if(id==="summary"){ const parts=[...document.querySelectorAll("#result .bubble p, #result .bubble li")].map(n=>n.textContent); speak(parts.join(" "),id); return }
+  const m=state.chat[Number(id.slice(1))]; if(m) speak(m.text,id);
+});
+// iPhones only allow speech that starts from a tap; the first tap anywhere unlocks it for the rest of the visit
+document.addEventListener("pointerdown",function once(){unlockSpeech();document.removeEventListener("pointerdown",once)},{passive:true});
+
+// Hands-free-ish: after keyboard dictation fills the box, send once the words stop coming
+let idleTimer=null;
+$("#q").addEventListener("input",()=>{
+  clearTimeout(idleTimer);
+  if(!$("#autoSend").checked||!$("#q").value.trim()||$("#talkBtn").disabled) return;
+  idleTimer=setTimeout(()=>{ if($("#q").value.trim()&&!$("#talkBtn").disabled) $("#talkForm").requestSubmit() },2800);
+});
+try{ if(store.get("pw-autosend")===false) $("#autoSend").checked=false }catch(e){}
+$("#autoSend").addEventListener("change",e=>{store.set("pw-autosend",e.target.checked); clearTimeout(idleTimer)});
+$("#q").addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();clearTimeout(idleTimer);$("#talkForm").requestSubmit()} });
+
+if(!TTS){ $("#autoSpeak").closest("label").hidden=true; $("#voiceSel").closest("label").hidden=true; $("#voiceTip").hidden=true }
+try{ const a=store.get("pw-autospeak"); if(a===false) $("#autoSpeak").checked=false }catch(e){}
+$("#autoSpeak").addEventListener("change",e=>{ store.set("pw-autospeak",e.target.checked); if(!e.target.checked) stopSpeaking() });
+
+function renderChat(){
+  $("#chat").innerHTML = state.chat.map((m,i)=> m.who==="you"
+    ? `<div class="me">${esc(m.text)}</div>`
+    : `<div class="voice">${SUITCASE}<div class="bubble"><p style="white-space:pre-wrap">${esc(m.text)}</p>${m.changes?`<span class="chg">${esc(m.changes)}</span>`:""}${speakBtn("c"+i)}</div></div>`).join("");
+  const c=$("#chat"); c.scrollTop=c.scrollHeight;
+}
+
+$("#result").addEventListener("change",e=>{
+  const k=e.target.dataset&&e.target.dataset.k; if(k==null)return;
+  const kk=key(state.trip), c=store.get(kk)||{}; c[k]=e.target.checked; store.set(kk,c); render();
+});
+$("#result").addEventListener("click",e=>{
+  const u=e.target.closest("[data-unit]"); if(!u)return; unit=u.dataset.unit; store.set("pw-unit",unit); render();
+});
+
+/* ---------- form defaults ---------- */
+(function(){
+  const d=new Date(); const iso=x=>new Date(d.getTime()+x*86400000).toISOString().slice(0,10);
+  $("#start").value=iso(14); $("#end").value=iso(18); $("#start").min=iso(0);
+  const draft=store.get("pw-form3"); if(draft){for(const k in draft){const f=$("#"+k); if(f){f.type==="checkbox"?f.checked=draft[k]:f.value=draft[k]}}}
+  if(draft&&draft.bag){const r=document.querySelector(`input[name="bag"][value="${draft.bag}"]`); if(r) r.checked=true}
+})();
+
+/* ---------- Claude ---------- */
+/* AI calls go to PackWise's own server (api/claude.js), so visitors don't need a Claude account */
+async function shrinkImage(file){
+  const url=URL.createObjectURL(file);
+  try{
+    const img=await new Promise((ok,bad)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=bad;i.src=url});
+    const max=1400, s=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));
+    const c=document.createElement("canvas"); c.width=Math.round(img.naturalWidth*s); c.height=Math.round(img.naturalHeight*s);
+    c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+    return c.toDataURL("image/jpeg",0.82).split(",")[1];
+  }catch(e){ throw {code:"image_rejected"} }
+  finally{ URL.revokeObjectURL(url) }
+}
+function pullJson(text){
+  const t=String(text||"").replace(/^```(?:json)?\s*/i,"").replace(/```\s*$/,"");
+  try{return JSON.parse(t)}catch(e){}
+  const a=t.indexOf("{"), b=t.lastIndexOf("}");
+  if(a>=0&&b>a){try{return JSON.parse(t.slice(a,b+1))}catch(e){}}
+  throw {code:"invalid_json"};
+}
+const samplePromise = Promise.resolve({
+  limits: async()=>({images:true}),
+  json: async(prompt,opts={})=>{
+    const files=opts.images?(Array.isArray(opts.images)?opts.images:[opts.images]):[];
+    const images=[]; for(const f of files.slice(0,2)) images.push(await shrinkImage(f));
+    let res;
+    try{
+      res=await fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},signal:opts.signal,
+        body:JSON.stringify({prompt:String(prompt),images,tier:opts.modelTier||"default"})});
+    }catch(e){ throw {code:e&&e.name==="AbortError"?"cancelled":"upstream_error"} }
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok) throw {code:data.code||"upstream_error"};
+    return pullJson(data.text);
+  }
+});
+const ERR = {
+  not_granted:"The AI helper isn't switched on for this site yet.",
+  busy:"PackWise is busy right now. Wait a minute, then try again.",
+  sampling_disabled:"The AI helper isn't available right now.",
+  rate_limited:"Too many requests just now. Wait a minute, then try again.",
+  session_expired:"Reload the page, then try again.",
+  invalid_json:"The answer came back garbled. Try again.",
+  refused:"The suitcase couldn't help with that one. Try rewording it.",
+  image_rejected:"That image couldn't be read. Try a JPEG or PNG under 20 MB.",
+  images_unavailable:"Photos aren't available in this view. Paste the text instead."
+};
+const RETRYABLE=["rate_limited","session_expired","invalid_json","refused","upstream_error","image_rejected","images_unavailable"];
+
+samplePromise.then(async s=>{
+  const caps = s ? await s.limits().catch(()=>null) : null;
+  if(!caps||!caps.images){
+    $("#tabPhoto").disabled=true; $("#tabPhoto").textContent="Scan a photo (unavailable)";
+    $("#itinPhotoRow").hidden=true;
+  }
+});
+
+/* photo scan */
+let photoFile=null;
+$("#photo").addEventListener("change",e=>{
+  photoFile=e.target.files&&e.target.files[0]||null;
+  const img=$("#preview");
+  if(photoFile){img.src=URL.createObjectURL(photoFile);img.hidden=false;$("#drop").classList.add("has")}
+  else{img.hidden=true;$("#drop").classList.remove("has")}
+  $("#scanBtn").disabled=!photoFile; $("#scanRes").hidden=true; scanned=null; showChosen();
+});
+$("#scanBtn").addEventListener("click",async()=>{
+  const st=$("#scanStatus"), btn=$("#scanBtn"); st.className="status";
+  btn.disabled=true; st.textContent="Measuring your suitcase against the reference object…";
+  try{
+    const sample=await samplePromise; if(!sample) throw {code:"sampling_disabled"};
+    const r=await sample.json(`The image shows a suitcase or travel bag, ideally open so its interior and depth are visible, next to ${$("#refObj").value}, placed there for scale.
+First find the reference item and use its known size to measure the bag. Estimate the bag's outer height, width and depth in inches (use the open interior to judge depth), then its usable interior volume in liters (interior is usually about 85% of the outer box for a hard case, less for wheels and handle housing).
+If you can't see a bag or the reference item, set liters to 0 and say in "note" what to fix in the photo (for example: "I can't see the water bottle; put it right next to the bag"). If the bag is closed, still estimate, but mention that an open bag gives a better read.
+Reply with only JSON: {"heightIn":0,"widthIn":0,"depthIn":0,"liters":0,"confidence":"low|medium|high","note":"one short sentence"}`,{images:photoFile,modelTier:"default"});
+    const L=Math.round(Number(r&&r.liters)||0);
+    if(L<5){st.textContent=(r&&r.note)||"I couldn't make out the bag and the reference object. Try another photo.";st.classList.add("err");return}
+    scanned={liters:Math.min(200,L)};
+    $("#scanRes").innerHTML=`About <strong>${Math.round(r.heightIn)}″ × ${Math.round(r.widthIn)}″ × ${Math.round(r.depthIn)}″</strong>, roughly <strong>${scanned.liters} L</strong> of packing space. Confidence: ${esc(r.confidence||"low")}.${r.note?`<br><span class="hint">${esc(r.note)}</span>`:""}`;
+    $("#scanRes").hidden=false; st.textContent=""; showChosen();
+  }catch(err){
+    const code=err&&err.code; st.textContent=ERR[code]||"The scan didn't go through. Try again."; st.classList.add("err");
+  }finally{btn.disabled=!photoFile}
+});
+
+/* brand and model lookup (from Claude's product knowledge; no live web search in the prototype) */
+$("#modelName").addEventListener("input",()=>{ if(looked){looked=null;$("#modelRes").hidden=true;showChosen()} });
+$("#modelName").addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventDefault();$("#modelBtn").click()} });
+$("#modelBtn").addEventListener("click",async()=>{
+  const q=$("#modelName").value.trim(), st=$("#modelStatus"), btn=$("#modelBtn"); st.className="status";
+  if(!q){st.textContent="Type your suitcase's brand and model first.";st.classList.add("err");return}
+  btn.disabled=true; st.textContent="Looking up your suitcase…"; $("#modelRes").hidden=true;
+  try{
+    const sample=await samplePromise; if(!sample) throw {code:"sampling_disabled"};
+    const r=await sample.json(`A traveler says their suitcase is: """${q.slice(0,200)}"""
+From your knowledge of luggage brands and their published specs, identify the exact product and give its manufacturer dimensions (height x width x depth in inches, including wheels and handles) and its capacity in liters. If the maker lists an expanded capacity, give the standard (unexpanded) number in "liters" and the expanded one in "expandedLiters".
+Be honest about certainty: "high" only if you know this exact model's published specs; "medium" if you know the line but not this exact version or year; "low" if you are estimating from a typical bag of that kind. If you can't tell what bag this is, set found to false.
+Reply with only JSON: {"found":true,"brand":"","model":"","bagType":"carry-on|checked|backpack|duffel|other","heightIn":0,"widthIn":0,"depthIn":0,"liters":0,"expandedLiters":null,"confidence":"high|medium|low","note":"one short sentence, e.g. what to double-check"}`,{modelTier:"default",cache:{gcTime:86400000}});
+    const L=Math.round(Number(r&&r.liters)||0);
+    if(!r||r.found===false||L<5){
+      st.textContent=(r&&r.note)||"I couldn't find that model. Check the spelling or add the size, or pick the closest size instead."; st.classList.add("err"); return;
+    }
+    const name=[r.brand,r.model].filter(Boolean).join(" ")||q;
+    looked={liters:Math.min(200,L),name};
+    const conf=r.confidence||"low";
+    const dims=(r.heightIn&&r.widthIn&&r.depthIn)?`<strong>${Number(r.heightIn)}″ × ${Number(r.widthIn)}″ × ${Number(r.depthIn)}″</strong>, `:"";
+    $("#modelRes").innerHTML=`<strong>${esc(name)}</strong><br>${dims}about <strong>${looked.liters} L</strong>${r.expandedLiters?` (${Math.round(r.expandedLiters)} L expanded)`:""}.
+      ${conf==="high"?"":`<br><span class="hint">${conf==="medium"?"Pretty sure, but double-check the size on the tag or the maker's website.":"This is my best estimate for a bag like this. Double-check the size on the tag or the maker's website."}</span>`}
+      ${r.note?`<br><span class="hint">${esc(r.note)}</span>`:""}`;
+    $("#modelRes").hidden=false; st.textContent=""; showChosen();
+  }catch(err){
+    const code=err&&err.code; st.textContent=ERR[code]||"The lookup didn't go through. Try again."; st.classList.add("err");
+  }finally{btn.disabled=false}
+});
+
+/* itinerary screenshot */
+let itinFile=null;
+$("#itinPhoto").addEventListener("change",e=>{
+  itinFile=e.target.files&&e.target.files[0]||null;
+  $("#itinPreview").hidden=!itinFile; $("#itinClear").hidden=!itinFile;
+  if(itinFile) $("#itinPreview").src=URL.createObjectURL(itinFile);
+});
+$("#itinClear").onclick=()=>{itinFile=null;$("#itinPhoto").value="";$("#itinPreview").hidden=true;$("#itinClear").hidden=true};
+
+/* build plan */
+const ITEM_SCHEMA=`{"name":"...","category":"Clothing|Weather gear|Toiletries|Tech|Documents|Often forgotten|Other","qty":1,"liters":0.5,"essential":true,"wear":false,"note":""}`;
+function buildPrompt(t,hasImg){
+  const today = new Date().toISOString().slice(0,10);
+  return `You are PackWise, a packing assistant for budget-conscious travelers.
+Today's date: ${today}.
+Trip: ${t.dest}, leaving ${t.start}, returning ${t.end} (${t.nights} nights). Trip type: ${t.purpose}. Laundry available: ${t.laundry?"yes":"no"}.
+Bag: ${t.bagName}, about ${t.bagL} liters.
+${t.itinerary?`Itinerary the traveler typed or pasted:\n"""${t.itinerary.slice(0,6000)}"""`:"No typed itinerary."}
+${hasImg?"An image of the traveler's itinerary is attached. Read every day, time, place and activity from it.":""}
+
+1. Weather from past years: describe what ${t.dest} has typically been like on these specific calendar dates (${t.start.slice(5)} to ${t.end.slice(5)}) over past years, from climate records you know. Give average high and low, how many of these days typically see rain or snow, and anything that often catches visitors off guard then. Never phrase it as a forecast.
+${t.mode==="business"
+? `MODE: BUSINESS TRIP. The traveler wants to look polished and make the right impression. Favor wrinkle-resistant, mix-and-match pieces that rewear well, and include work essentials (laptop and charger, business cards, a clicker if presenting, wrinkle-release spray or a travel steamer). For each day, add a "tip": one short style tip on color or fit for that day's setting, drawn from common color and dress conventions (e.g. navy tends to read as trustworthy and calm, a structured blazer reads as polished, softer colors feel approachable at team dinners). Phrase tips as style suggestions ("tends to", "usually comes across as"), never as guarantees or science.`
+: `MODE: PLEASURE TRIP. Focus on comfort, fun and versatile pieces that mix and match. For each day, add a "tip": one short, practical tip for enjoying that day (shoes for lots of walking, a layer for evenings, something for photos).`}
+2. Day-by-day plan: one entry per calendar day from ${t.start} to ${t.end}. Use the itinerary where it covers that day; otherwise infer a sensible day for this trip type. For each day say what to wear.
+3. Packing list sized to fit the bag, covering every day's activities. Give exact counts (e.g. 5 pairs of socks). Estimate each item's packed volume in liters per unit (folded or rolled). Mark bulky items to wear in transit "wear": true (no bag space). Mark nice-to-haves "essential": false. Include commonly forgotten items (toothbrush, razor, chargers, plug adapter if abroad, prescription medications, sunglasses) under "Often forgotten". 15-32 items. Notes under 8 words, only when useful (e.g. which day an item is for).
+4. 2-4 short packing tips specific to this trip.
+
+Reply with only this JSON:
+{"weather":{"summary":"1-2 sentences in past-years framing","highF":0,"lowF":0,"highC":0,"lowC":0,"wetDays":"e.g. Usually 2 of these 5 days see rain","watchFor":"short phrase or empty"},
+ "days":[{"date":"YYYY-MM-DD","title":"short","plans":"one sentence","wear":"short outfit","tip":"one short sentence"}],
+ "items":[${ITEM_SCHEMA}],
+ "tips":["..."]}`;
+}
+
+$("#tripForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const st=$("#status"); st.className="status";
+  const dest=$("#dest").value.trim(), start=$("#start").value, end=$("#end").value;
+  if(pending()){st.textContent=mode==="photo"?"Scan your suitcase photo first, or switch to Pick a size.":"Look up your suitcase first, or switch to Pick a size.";st.classList.add("err");return}
+  if(!dest){st.textContent="Enter a destination.";st.classList.add("err");$("#dest").focus();return}
+  if(!start||!end||end<=start){st.textContent="Set a return date after your departure date.";st.classList.add("err");return}
+  if(nightsBetween(start,end)>30){st.textContent="Trips up to 30 nights work best for now.";st.classList.add("err");return}
+  const b=currentBag();
+  const t={mode:tripMode,dest,start,end,nights:nightsBetween(start,end),purpose:$("#purpose").value,itinerary:$("#itin").value.trim(),laundry:$("#laundry").checked,...b};
+  const r0=document.querySelector('input[name="bag"]:checked');
+  store.set("pw-form3",{dest,start,end,purpose:t.purpose,itin:t.itinerary,laundry:t.laundry,customL:$("#customL").value,useCustom:$("#useCustom").checked,bag:r0&&r0.value});
+
+  const btn=$("#goBtn"); btn.disabled=true; btn.textContent="Building your plan…";
+  st.textContent=itinFile?"Reading your itinerary, checking past weather and fitting items to your bag. This can take a minute or two.":"Checking past weather for your dates and fitting items to your bag. This can take up to a minute.";
+  let result=null;
+  try{
+    const sample=await samplePromise;
+    if(!sample) throw {code:"sampling_disabled"};
+    const opts={modelTier:"default"}; if(itinFile) opts.images=itinFile;
+    const r=await sample.json(buildPrompt(t,!!itinFile),opts);
+    if(!r||!Array.isArray(r.items)||!r.items.length) throw {code:"invalid_json"};
+    const w=r.weather;
+    result={weather:(w&&isFinite(w.highF))?w:null,days:cleanDays(r.days),items:r.items.filter(i=>i&&i.name).map(cleanItem),tips:Array.isArray(r.tips)?r.tips.map(String):[]};
+    st.textContent="";
+  }catch(err){
+    const code=err&&err.code;
+    if(RETRYABLE.includes(code)){
+      st.textContent=ERR[code]||"Something went wrong. Try again."; st.classList.add("err");
+      btn.disabled=false; btn.textContent="Build my packing plan"; return;
+    }
+    result=fallbackList(t);
+    st.textContent=(ERR[code]||"The AI helper wasn't reachable.")+" You're seeing a basic list without weather.";
+  }
+  justChanged=new Set();
+  state={trip:t,...result,chat:[]}; save(); render(); renderChat();
+  btn.disabled=false; btn.textContent="Build my packing plan";
+  if(window.matchMedia("(max-width:840px)").matches) $("#result").scrollIntoView({behavior:"smooth",block:"start"});
+});
+
+/* talk to your suitcase: replies AND edits the list */
+function applyChanges(r){
+  const names=[];
+  const items=[...state.items];
+  const idx=n=>items.findIndex(i=>norm(i.name)===norm(n));
+  (Array.isArray(r.remove)?r.remove:[]).forEach(n=>{const k=idx(n); if(k>=0){names.push("removed "+items[k].name);items.splice(k,1)}});
+  (Array.isArray(r.update)?r.update:[]).forEach(u=>{if(!u||!u.name)return;const k=idx(u.name); if(k<0)return;
+    const it={...items[k]}; if(u.qty!=null) it.qty=Math.max(1,Math.round(Number(u.qty)||it.qty)); if(u.note!=null) it.note=String(u.note);
+    if(u.essential!=null) it.essential=!!u.essential; if(u.wear!=null) it.wear=!!u.wear;
+    items[k]=it; names.push("updated "+it.name); justChanged.add(norm(it.name))});
+  (Array.isArray(r.add)?r.add:[]).forEach(a=>{if(!a||!a.name)return; const it=cleanItem(a); const k=idx(it.name);
+    if(k>=0) items[k]=it; else items.push(it); names.push("added "+it.name); justChanged.add(norm(it.name))});
+  state.items=items;
+  const nd=cleanDays(r.days); if(nd.length){state.days=nd; names.push("updated your day-by-day plan")}
+  if(!names.length) return "";
+  const s=names.join(", "); return "List updated: "+s.charAt(0).toLowerCase()+s.slice(1)+".";
+}
+
+let talkCtl=null;
+$("#chips").addEventListener("click",e=>{const b=e.target.closest("button"); if(!b)return; $("#q").value=b.textContent; $("#q").focus()});
+$("#stopBtn").onclick=()=>talkCtl&&talkCtl.abort();
+$("#talkForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const q=$("#q").value.trim(), st=$("#talkStatus"); st.className="status"; st.textContent="";
+  if(!q){st.textContent="Type a message first.";return}
+  const s=state, t=s.trip;
+  const list=s.items.map(i=>`- ${i.name} | qty ${i.qty} | ${i.liters} L each | ${i.category}${i.wear?" | worn":""}${i.essential?"":" | optional"}`).join("\n");
+  const days=(s.days||[]).map(d=>`${d.date}: ${d.title}. ${d.plans} Wear: ${d.wear}`).join("\n");
+  const history=s.chat.slice(-10).map(m=>(m.who==="you"?"Traveler: ":"Suitcase: ")+m.text).join("\n");
+  const total=s.items.reduce((a,i)=>a+vol(i),0);
+  const prompt=`You are the traveler's suitcase in the PackWise app. Talk in first person ("I"), warm and brief.
+${t.mode==="business"?"This is a BUSINESS trip: when it fits, coach them like a sharp work stylist (which jacket or colors suit a pitch, a client dinner, a conference), framing color and clothing effects as style tips, never guarantees.":"This is a PLEASURE trip: keep the focus on comfort, fun and versatile outfits."}
+Trip: ${t.dest}, ${t.start} to ${t.end} (${t.nights} nights), ${t.purpose}. Bag: ${t.bagName}, ${t.bagL} L; currently about ${total.toFixed(1)} L packed (comfortable max ${(t.bagL*0.85).toFixed(1)} L).
+${s.weather?`Past-years weather for these dates: ${s.weather.summary} Avg high ${Math.round(s.weather.highF)}F, low ${Math.round(s.weather.lowF)}F. ${s.weather.wetDays||""}`:"No weather info."}
+${days?"Day-by-day plan:\n"+days:""}
+${t.itinerary?"Original itinerary: "+t.itinerary.slice(0,2000):""}
+Current packing list:
+${list}
+${history?"Conversation so far:\n"+history:""}
+New message from the traveler: """${q}"""
+
+If the message adds details (activities, events, places, people, dress codes, things a friend said, preferences) or asks for changes, update the list: add items, remove items, or change counts. Use exact existing names for remove/update. Keep the bag size in mind and say if it no longer fits. Only send "days" (the full updated array) if the day-by-day plan should change. Weather talk must be about past-years patterns, never a forecast.
+"reply" is what you say to them, under 90 words, plain text.
+
+Reply with only JSON:
+{"reply":"...","add":[${ITEM_SCHEMA}],"remove":["exact item name"],"update":[{"name":"exact item name","qty":2,"note":"..."}],"days":null}`;
+  clearTimeout(idleTimer); stopSpeaking();
+  state.chat.push({who:"you",text:q}); $("#q").value=""; renderChat();
+  talkCtl=new AbortController();
+  $("#talkBtn").disabled=true; $("#stopBtn").hidden=false; st.textContent="Your suitcase is thinking…";
+  try{
+    const sample=await samplePromise; if(!sample) throw {code:"sampling_disabled"};
+    const r=await sample.json(prompt,{cache:false,signal:talkCtl.signal});
+    if(!r||typeof r.reply!=="string") throw {code:"invalid_json"};
+    justChanged=new Set();
+    const changes=applyChanges(r);
+    if(state.example){state.example=false}
+    state.chat.push({who:"bag",text:r.reply,changes});
+    st.textContent="";
+    save(); render(); renderChat();
+    if($("#autoSpeak").checked) speak(r.reply,"c"+(state.chat.length-1));
+  }catch(err){
+    const code=err&&err.code;
+    state.chat.pop(); renderChat(); $("#q").value=q;
+    st.textContent=code==="cancelled"?"Stopped.":(ERR[code]||"Something went wrong. Try again."); if(code!=="cancelled") st.classList.add("err");
+  }finally{$("#talkBtn").disabled=false;$("#stopBtn").hidden=true}
+});
+
+/* ---------- Look: outfit per day ---------- */
+const COLORS={navy:"#22345C",white:"#F6F4EE",ivory:"#F2EBD9",cream:"#EFE6D2",black:"#202326",charcoal:"#3E4247",gray:"#8C9196",grey:"#8C9196","light blue":"#A9C8E8",blue:"#3E6FB0",sky:"#8DB8E2",denim:"#456A92",jeans:"#456A92",khaki:"#C9B287",tan:"#C49A6C",beige:"#D9C6A5",camel:"#B98A55",brown:"#6E4A2E",olive:"#6B7046",green:"#3F7A57",forest:"#2F5A3E",burgundy:"#6E2333",maroon:"#6E2333",red:"#B53A33",pink:"#E8A3B4",blush:"#EBC4C0",coral:"#E8806A",orange:"#E08A3C",mustard:"#C9A13A",yellow:"#E9C94F",teal:"#2F7F75",purple:"#6A4C93",lavender:"#B8A6D9"};
+const SLOT_WORDS=[
+  ["dress",/\b(dress|gown|jumpsuit)\b(?!\s*(shoes|shirt|pants|trousers|boots|code))/],
+  ["outer",/\b(blazer|jacket|coat|overcoat|parka|cardigan|shell|suit|vest|fleece)\b/],
+  ["shoes",/\b(shoes|sneakers|boots|loafers|heels|sandals|flats|oxfords|trainers)\b/],
+  ["bottom",/\b(pants|chinos|jeans|trousers|slacks|shorts|skirt|leggings)\b/],
+  ["top",/\b(shirt|button-up|button-down|tee|t-shirt|blouse|sweater|polo|top|layer|layers|knit|henley|turtleneck)\b/]
+];
+const DEFAULT_PIECE={top:{name:"Shirt",hex:COLORS.white},bottom:{name:"Pants",hex:COLORS.charcoal},shoes:{name:"Shoes",hex:COLORS.brown}};
+function colorIn(s){const t=s.toLowerCase();const k=Object.keys(COLORS).sort((a,b)=>b.length-a.length).find(c=>t.includes(c));return k?COLORS[k]:null}
+function cap(s){s=String(s||"").trim();return s.charAt(0).toUpperCase()+s.slice(1)}
+function piecesFromWear(text){
+  const out={};
+  String(text||"").split(/[,;+]|\band\b|\bwith\b/i).forEach(part=>{
+    const p=part.trim(); if(!p) return; const low=p.toLowerCase();
+    for(const [slot,re] of SLOT_WORDS){
+      if(!re.test(low)||out[slot]) continue;
+      const hex=colorIn(low)||(/jeans|denim/.test(low)?COLORS.denim:null);
+      const name=cap(p.replace(/\bon the plane\b|\bagain\b|\bat night\b|\.$/gi,"").trim());
+      out[slot]={name,hex:hex||(slot==="outer"?COLORS.charcoal:slot==="shoes"?COLORS.brown:slot==="bottom"?COLORS.charcoal:COLORS.white)};
+      if(/\bsuit\b/.test(low)&&!out.bottom) out.bottom={name:"Matching trousers",hex:out[slot].hex};
+      break;
+    }
+  });
+  return out;
+}
+function fillOutfit(p){
+  const o={...p};
+  if(o.dress){delete o.top;delete o.bottom}
+  else{ if(!o.top) o.top={...DEFAULT_PIECE.top}; if(!o.bottom) o.bottom={...DEFAULT_PIECE.bottom} }
+  if(!o.shoes) o.shoes={...DEFAULT_PIECE.shoes};
+  return o;
+}
+function guessOutfits(days){
+  let first=null;
+  return days.map((d,i)=>{
+    let p=/same .* as day one|same .* as day 1/i.test(d.wear)&&first?first:piecesFromWear(d.wear);
+    const o=fillOutfit(p); if(i===0) first=p;
+    return {date:d.date,occasion:d.title,pieces:o};
+  });
+}
+function safeHex(h,fb){return /^#[0-9a-f]{6}$/i.test(String(h||""))?h:fb}
+function outfitSvg(p){
+  const e='stroke="var(--edge)" stroke-width="1.6" stroke-linejoin="round"';
+  let s='';
+  if(p.dress){
+    s+=`<path ${e} fill="${p.dress.hex}" d="M38 10q12 7 24 0l5 22-6 6 14 70H25l14-70-6-6z"/>`;
+  }else{
+    s+=`<path ${e} fill="${p.top.hex}" d="M30 12l12-5q8 7 16 0l12 5 14 15-8 8-6-4v30H30V31l-6 4-8-8z"/>`;
+  }
+  if(p.outer && !p.dress){
+    s+=`<path ${e} fill="${p.outer.hex}" d="M29 12l13-5 8 32 8-32 13 5 13 16v34h-10V36l-2 30H30l-2-30v26H18V28z"/>`;
+  }else if(p.outer){
+    s+=`<path ${e} fill="${p.outer.hex}" d="M30 12l12-5 8 18 8-18 12 5 12 16v26h-9V34l-1 18H31l-1-18v20h-9V28z"/>`;
+  }
+  if(!p.dress){
+    const n=(p.bottom.name||"").toLowerCase();
+    if(/short/.test(n)) s+=`<path ${e} fill="${p.bottom.hex}" d="M31 68h38l3 30H54l-4-16-4 16H28z"/>`;
+    else if(/skirt/.test(n)) s+=`<path ${e} fill="${p.bottom.hex}" d="M33 68h34l9 40H24z"/>`;
+    else s+=`<path ${e} fill="${p.bottom.hex}" d="M31 68h38l2 54H56l-6-38-6 38H29z"/>`;
+  }
+  s+=`<path ${e} fill="${p.shoes.hex}" d="M24 132h20v6H18q0-6 6-6z"/><path ${e} fill="${p.shoes.hex}" d="M56 132h20q6 0 6 6H56z"/>`;
+  return `<svg viewBox="0 0 100 144" role="img" aria-label="Outfit drawing">${s}</svg>`;
+}
+const SLOT_ORDER=["outer","top","dress","bottom","shoes"];
+function renderLook(){
+  const s=state, el=$("#lookOut"); if(!el) return;
+  const k=key(s.trip);
+  const L = s.look && s.look.forKey===k ? s.look : null;
+  const outfits = L ? L.outfits : guessOutfits(s.days||[]);
+  if(!outfits.length){ el.innerHTML=`<p class="hint">Plan your trip first, then your outfits show up here, one for each day.</p>`; return; }
+  const pal = L&&L.palette&&L.palette.length ? `<div class="pal"><h3>Your colors</h3><div class="chipset">${L.palette.map(c=>`<span class="sw"><i style="background:${c.hex}"></i>${esc(c.name)}</span>`).join("")}</div></div>` : "";
+  const note = L&&L.note ? `<div class="voice">${SUITCASE}<div class="bubble"><p>${esc(L.note)}</p></div></div>` : "";
+  const tag = L ? (L.withPhoto?"Picked for you":"Picked for your trip") : (s.example?"Example outfits":"From your day plan");
+  el.innerHTML = `${note}${pal}<div class="ofhead"><h3>Outfit for each day</h3><span class="pill">${tag}</span></div>
+    <ol class="ofits">${outfits.map(o=>{const f=fmtDay(o.date);const p=o.pieces;return `<li class="ofit">
+      <div class="ofday"><b>${esc(f.dow)} ${esc(f.md)}</b><span>${esc(o.occasion)}</span></div>
+      ${outfitSvg(p)}
+      <ul>${SLOT_ORDER.filter(x=>p[x]).map(x=>`<li><i style="background:${p[x].hex}"></i>${esc(p[x].name)}</li>`).join("")}</ul>
+    </li>`}).join("")}</ol>`;
+}
+let selfieFile=null;
+$("#selfie").addEventListener("change",e=>{
+  selfieFile=e.target.files&&e.target.files[0]||null;
+  const img=$("#selfiePrev");
+  if(selfieFile){img.src=URL.createObjectURL(selfieFile);img.hidden=false;$("#selfieIcon").hidden=true;$("#selfieTxt").textContent="Change photo";$("#selfieClear").hidden=false}
+  else clearSelfie();
+});
+function clearSelfie(){selfieFile=null;$("#selfie").value="";$("#selfiePrev").hidden=true;$("#selfieIcon").hidden=false;$("#selfieTxt").textContent="Add a photo of yourself";$("#selfieClear").hidden=true}
+$("#selfieClear").addEventListener("click",clearSelfie);
+samplePromise.then(async s=>{
+  const caps = s ? await s.limits().catch(()=>null) : null;
+  if(!caps||!caps.images){ $("#selfie").disabled=true; $("#selfieTxt").textContent="Photos aren't available here"; }
+  if(!s){ $("#lookBtn").disabled=true; $("#lookStatus").textContent="Outfit planning isn't available in this view."; }
+});
+$("#lookBtn").addEventListener("click",async()=>{
+  const st=$("#lookStatus"), btn=$("#lookBtn"); st.className="status";
+  const s=state, t=s.trip;
+  if(!(s.days&&s.days.length)){st.textContent="Plan your trip first, then I can pick outfits for each day.";return}
+  btn.disabled=true; st.textContent=selfieFile?"Looking at your colors and planning each day…":"Planning an outfit for each day…";
+  const days=s.days.map(d=>`${d.date}: ${d.title}. ${d.plans} Current wear idea: ${d.wear}`).join("\n");
+  const w=s.weather?`Typical weather: highs about ${Math.round(s.weather.highF)}°F, lows about ${Math.round(s.weather.lowF)}°F. ${s.weather.summary||""}`:"";
+  const prompt=`You are PackWise, a friendly travel stylist. Plan one outfit for each day of this trip.
+Trip: ${t.dest}, ${t.start} to ${t.end}, purpose: ${t.purpose}, ${t.mode==="business"?"business trip":"leisure trip"}. ${w}
+Days:
+${days}
+${selfieFile?`The attached photo shows the traveler. Use ONLY their coloring (skin tone, hair color, eye color) and the style of clothes they're wearing to choose colors that flatter them. Never comment on their body, weight, age, attractiveness or who they are. If the photo shows no person, ignore it and say so in "note".`:"No photo was given, so choose versatile colors that suit the trip and the occasions."}
+Reuse pieces across days so it packs light. Fit each outfit to that day's plans and weather.${t.mode==="business"?" For meetings or pitches, pick colors that read as confident and approachable.":""}
+Reply with only JSON:
+{"note":"two short friendly sentences on the colors you chose and why","palette":[{"name":"Navy","hex":"#22345C"}],"outfits":[{"date":"YYYY-MM-DD","occasion":"short label","pieces":{"top":{"name":"White oxford shirt","hex":"#F6F4EE"},"outer":{"name":"Navy blazer","hex":"#22345C"},"bottom":{"name":"Gray chinos","hex":"#8C9196"},"shoes":{"name":"Brown loafers","hex":"#6E4A2E"}}}]}
+Rules: one outfit per day listed, same dates. "pieces" uses only the keys top, outer, bottom, dress, shoes; use "dress" instead of top and bottom when a dress fits; leave out "outer" when no layer is needed. Palette has 3 to 5 colors. Every hex is a 6-digit color like #22345C.`;
+  try{
+    const sample=await samplePromise; if(!sample) throw {code:"sampling_disabled"};
+    const opts={modelTier:"default"}; if(selfieFile) opts.images=[selfieFile];
+    const r=await sample.json(prompt,opts);
+    if(!r||!Array.isArray(r.outfits)||!r.outfits.length) throw {code:"invalid_json"};
+    const outfits=r.outfits.slice(0,14).map((o,i)=>{
+      const raw=o&&o.pieces||{}, p={};
+      ["top","outer","bottom","dress","shoes"].forEach(x=>{ if(raw[x]&&raw[x].name) p[x]={name:cap(String(raw[x].name).slice(0,60)),hex:safeHex(raw[x].hex,(DEFAULT_PIECE[x]||{hex:COLORS.charcoal}).hex)} });
+      const d=s.days[i]||{};
+      return {date:String(o.date||d.date||""),occasion:String(o.occasion||d.title||"").slice(0,60),pieces:fillOutfit(p)};
+    });
+    const palette=Array.isArray(r.palette)?r.palette.slice(0,6).filter(c=>c&&c.name).map(c=>({name:cap(String(c.name).slice(0,24)),hex:safeHex(c.hex,COLORS.gray)})):[];
+    s.look={forKey:key(t),withPhoto:!!selfieFile,note:String(r.note||"").slice(0,400),palette,outfits};
+    outfits.forEach(o=>{const d=s.days.find(x=>x.date===o.date); if(d) d.wear=SLOT_ORDER.filter(x=>o.pieces[x]).map(x=>o.pieces[x].name).join(", ")+"."});
+    save(); render(); st.textContent="";
+  }catch(err){
+    const code=err&&err.code; st.textContent=ERR[code]||"The outfits didn't come through. Try again."; st.classList.add("err");
+  }finally{btn.disabled=false}
+});
+
+/* ---------- Business / Pleasure switch ---------- */
+function setMode(m,initial){
+  tripMode=m; store.set("pw-mode",m);
+  document.body.dataset.mode=m;
+  $("#modeBiz").setAttribute("aria-selected",m==="business");
+  $("#modePlay").setAttribute("aria-selected",m==="pleasure");
+  const sel=$("#purpose"), keep=sel.value;
+  sel.innerHTML=PURPOSES[m].map(p=>`<option>${esc(p)}</option>`).join("");
+  if(PURPOSES[m].includes(keep)) sel.value=keep;
+  $("#chips").innerHTML=CHIPS[m].map(c=>`<button type="button">${esc(c)}</button>`).join("");
+  $("#q").placeholder=m==="business"?"e.g. the client is pretty formal":"e.g. my friend says it gets windy at night";
+  $("#itin").placeholder=m==="business"
+    ?"Tue: fly in, client dinner 7pm\nWed: 10am pitch, team lunch\nThu: follow-ups, fly home 5pm"
+    :"Fri: fly out, beach afternoon\nSat: snorkel tour, nice dinner\nSun: brunch, fly home";
+  if(!initial && state.example){ state = m==="business"?EXAMPLE_BIZ:EXAMPLE; justChanged=new Set(); render(); renderChat(); }
+}
+$("#modeBiz").onclick=()=>setMode("business");
+$("#modePlay").onclick=()=>setMode("pleasure");
+setMode(tripMode,true);
+if(state.example && (state.trip.mode==="business")!==(tripMode==="business")) state = tripMode==="business"?EXAMPLE_BIZ:EXAMPLE;
+
+showChosen();
+render();
+renderChat();
+})();
+</script>
+
+<script defer src="/_vercel/insights/script.js"></script>
+</body></html>
