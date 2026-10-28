@@ -2,7 +2,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: "Teal Band" direction — rounded teal header with the logo and talking-suitcase line, colored Scan/Plan/Pack tiles (teal, blue, orange), then white cards on cream in two columns that stack on phones */
+/* Layout: "Teal Band" direction — rounded teal header with the logo and talking-suitcase line, colored Plan/Scan/Pack tiles (teal, blue, orange), then white cards on cream in two columns that stack on phones */
 :root{
   --bg:#FBF6EC; --surface:#FFFFFF; --ink:#1D2A28; --muted:#5E6B68; --line:#EFE7D6; --shadow:#E8DFCC;
   --brand:#46958A; --brand-2:#57B5A9; --brand-deep:#2F7F75; --on-brand:#FFFFFF; --mint:#E3F4F1;
@@ -86,6 +86,7 @@ main .wrap{padding-block:18px 48px;display:grid;grid-template-columns:minmax(0,3
 h2{font-family:var(--display);font-weight:600;font-size:18px;margin:0;text-wrap:balance}
 h3{font-size:11.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0}
 label{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:13.5px}
+.field{display:flex;flex-direction:column;gap:6px}
 input,select,textarea{font:inherit;font-weight:400;color:var(--ink);background:var(--soft);border:2px solid var(--line);border-radius:12px;padding:10px 12px;width:100%;min-width:0}
 textarea{resize:vertical;min-height:70px}
 input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,.bagopt:focus-within,.tabs button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
@@ -96,6 +97,37 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 .status{font-size:13.5px;color:var(--muted);min-height:1.2em;margin:0}
 .status.err{color:var(--bad)}
 .sr{position:absolute;left:-9999px}
+
+/* destination autocomplete */
+.ac{position:relative}
+.acl{position:absolute;top:100%;left:0;right:0;z-index:30;margin:4px 0 0;padding:4px;list-style:none;background:var(--surface);border:2px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);max-height:280px;overflow-y:auto}
+.acl li{padding:8px 10px;border-radius:8px;cursor:pointer;font-size:14px;line-height:1.3}
+.acl li small{display:block;color:var(--muted);font-size:12px}
+.acl li:hover,.acl li[aria-selected="true"]{background:var(--mint)}
+
+/* missing or wrong fields: red * and a short note */
+.req{display:none;color:var(--bad);font-weight:700;margin-left:3px}
+[data-field].bad .req{display:inline}
+.ferr{display:none;color:var(--bad);font-size:12.5px;font-weight:600}
+[data-field].bad .ferr{display:block}
+[aria-invalid="true"]{border-color:var(--bad)!important}
+[data-field="bag1"].bad{box-shadow:0 0 0 2px var(--bad)}
+
+/* more than one bag */
+.bagnum{margin:0;font-weight:700;color:var(--brand-deep)}
+.morebags{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:16px;background:var(--soft);border:2px solid var(--line)}
+.bagtabs{display:flex;gap:6px;flex-wrap:wrap}
+.bagtabs button{flex:1 1 130px;border:2px solid var(--line);background:var(--soft);color:var(--ink);border-radius:14px;padding:8px 12px;text-align:left;font-weight:700;font-size:14px}
+.bagtabs button small{display:block;font-weight:500;font-size:12px;color:var(--muted)}
+.bagtabs button[aria-selected="true"]{background:var(--brand-deep);color:var(--on-brand);border-color:var(--brand-deep)}
+.bagtabs button[aria-selected="true"] small{color:var(--band-soft)}
+
+/* anything else box */
+.extra{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:16px;background:var(--mint)}
+.extra h3{color:var(--brand-deep);font-size:12px}
+:root[data-theme="dark"] .extra h3{color:var(--brand-2)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .extra h3{color:var(--brand-2)}}
+.extra textarea,.extra input{background:var(--surface)}
 
 /* scan */
 .tabs{display:flex;gap:4px;padding:4px;background:var(--soft);border:2px solid var(--line);border-radius:999px}
@@ -131,6 +163,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 .itin-photo{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px}
 .itin-photo img{height:56px;border-radius:8px;border:2px solid var(--line)}
 .itin-photo .clear{border:0;background:none;color:var(--muted);text-decoration:underline;padding:0;font-size:12.5px}
+.gobox{display:flex;flex-direction:column;gap:8px}
 
 button{font:inherit;cursor:pointer}
 .go{background:var(--accent);color:var(--on-accent);border:0;border-radius:999px;font-family:var(--display);font-weight:600;font-size:16px;padding:14px 18px}
@@ -235,14 +268,14 @@ button{font:inherit;cursor:pointer}
     </svg>
     <div>
       <div class="brand" role="img" aria-label="PackWise">Pack<span>Wise</span></div>
-      <div class="motto">Scan. Plan. Pack.</div>
+      <div class="motto">Plan. Scan. Pack.</div>
     </div>
   </div>
   <div class="hero">
     <p>Imagine if your suitcase could talk to you.</p>
     <div class="what">Tell PackWise where you're going and it builds your packing list from the weather, checks that your bag fits, and talks you through packing.</div>
     <div class="vet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></svg>Veteran owned and operated</div>
-    <small>Never guess what to pack again. Prototype v0.7</small>
+    <small>Never guess what to pack again. Prototype v0.9</small>
   </div>
   <style>
   .hero .what{font-size:14.5px;line-height:1.45;color:var(--on-band);margin-top:8px;max-width:60ch}
@@ -263,16 +296,74 @@ button{font:inherit;cursor:pointer}
     </button>
   </div>
   <nav class="steps" aria-label="How it works">
-    <div class="step" id="st1"><span class="n">1</span><div><b>SCAN</b><span>Size up your suitcase</span></div></div>
-    <div class="step" id="st2"><span class="n">2</span><div><b>PLAN</b><span>Itinerary, dates and past weather</span></div></div>
+    <div class="step" id="st1"><span class="n">1</span><div><b>PLAN</b><span>Where, when and what you're doing</span></div></div>
+    <div class="step" id="st2"><span class="n">2</span><div><b>SCAN</b><span>Size up your suitcase</span></div></div>
     <div class="step" id="st3"><span class="n">3</span><div><b>PACK</b><span>Day-by-day list your suitcase talks you through</span></div></div>
   </nav>
 </div>
 
 <main><div class="wrap">
   <form class="col" id="tripForm" novalidate>
-    <section class="panel" aria-labelledby="scanH">
-      <div class="phead"><span class="k">SCAN</span><h2 id="scanH">How big is your bag?</h2></div>
+    <section class="panel" aria-labelledby="planH">
+      <div class="phead"><span class="k">PLAN</span><h2 id="planH">Where are you headed?</h2></div>
+      <div class="field" data-field="dest">
+        <label for="dest"><span>Destination<span class="req" aria-hidden="true">*</span></span></label>
+        <div class="ac">
+          <input id="dest" placeholder="Start typing a city, e.g. San Diego" autocomplete="off" required role="combobox" aria-autocomplete="list" aria-controls="destList" aria-expanded="false">
+          <ul class="acl" id="destList" role="listbox" aria-label="Matching places" hidden></ul>
+        </div>
+        <span class="ferr" role="alert"></span>
+      </div>
+      <div class="row2">
+        <label for="start" data-field="start"><span>Leave<span class="req" aria-hidden="true">*</span></span><input id="start" type="date" required><span class="ferr" role="alert"></span></label>
+        <label for="end" data-field="end"><span>Return<span class="req" aria-hidden="true">*</span></span><input id="end" type="date" required><span class="ferr" role="alert"></span></label>
+      </div>
+      <label for="style" data-field="style"><span>Outfit style<span class="req" aria-hidden="true">*</span></span>
+        <select id="style" required>
+          <option value="">Choose one</option>
+          <option value="mens">Men's</option>
+          <option value="womens">Women's</option>
+          <option value="neutral">No preference</option>
+        </select>
+        <span class="hint">So the outfit ideas fit you.</span>
+        <span class="ferr" role="alert"></span>
+      </label>
+      <label for="purpose">Trip type
+        <select id="purpose">
+          <option selected>Leisure / city</option>
+          <option>Outdoors / active</option>
+          <option>Beach</option>
+          <option>Wedding or event</option>
+        </select>
+      </label>
+      <div class="extra">
+        <h3>Anything else we should know?</h3>
+        <label for="itin">Plans, events or dress codes <span class="hint">Optional. The more you tell us, the better your outfits.</span>
+          <textarea id="itin" rows="4" placeholder="Mon: fly out 7am, client dinner&#10;Tue–Wed: conference, hotel gym&#10;Thu: hike, fly home 6pm"></textarea>
+        </label>
+        <div class="itin-photo" id="itinPhotoRow">
+          <label for="itinPhoto" style="font-weight:600">Got a schedule? Add a photo or screenshot
+            <span class="hint">An hour-by-hour agenda works great. We'll suggest an outfit for each event.</span>
+            <input id="itinPhoto" type="file" accept="image/jpeg,image/png,image/webp">
+          </label>
+          <img id="itinPreview" alt="Itinerary screenshot" hidden>
+          <button type="button" class="clear" id="itinClear" hidden>Remove</button>
+        </div>
+      </div>
+      <label class="check" for="laundry"><input id="laundry" type="checkbox"> I can do laundry there</label>
+    </section>
+
+    <section class="panel" aria-labelledby="scanH" data-field="bag1">
+      <div class="phead"><span class="k">SCAN</span><h2 id="scanH">Now, what are you packing into?<span class="req" aria-hidden="true">*</span></h2></div>
+      <label for="bagCount">How many bags are you bringing?
+        <select id="bagCount">
+          <option value="1">1 bag</option>
+          <option value="2">2 bags</option>
+          <option value="3">3 bags</option>
+          <option value="4">4 bags</option>
+        </select>
+      </label>
+      <p class="bagnum" id="bag1Label" hidden>Bag 1</p>
       <div class="tabs" role="tablist">
         <button type="button" role="tab" id="tabPick" aria-selected="true" aria-controls="panePick">Pick a size</button>
         <button type="button" role="tab" id="tabPhoto" aria-selected="false" aria-controls="panePhoto">Scan a photo</button>
@@ -363,40 +454,15 @@ button{font:inherit;cursor:pointer}
         <p class="status" id="modelStatus" role="status"></p>
         <div class="scanres" id="modelRes" hidden></div>
       </div>
+      <div class="morebags" id="moreBags" hidden></div>
       <p class="chosen" id="chosen"></p>
+      <span class="ferr" role="alert"></span>
     </section>
 
-    <section class="panel" aria-labelledby="planH">
-      <div class="phead"><span class="k">PLAN</span><h2 id="planH">Where are you headed?</h2></div>
-      <label for="dest">Destination
-        <input id="dest" placeholder="City, state or country" autocomplete="off" required>
-      </label>
-      <div class="row2">
-        <label for="start">Leave<input id="start" type="date" required></label>
-        <label for="end">Return<input id="end" type="date" required></label>
-      </div>
-      <label for="purpose">Trip type
-        <select id="purpose">
-          <option selected>Leisure / city</option>
-          <option>Outdoors / active</option>
-          <option>Beach</option>
-          <option>Wedding or event</option>
-        </select>
-      </label>
-      <label for="itin">Your itinerary <span class="hint">Paste it, or add a screenshot below. Optional.</span>
-        <textarea id="itin" rows="4" placeholder="Mon: fly out 7am, client dinner&#10;Tue–Wed: conference, hotel gym&#10;Thu: hike, fly home 6pm"></textarea>
-      </label>
-      <div class="itin-photo" id="itinPhotoRow">
-        <label for="itinPhoto" style="font-weight:600">Itinerary screenshot or photo
-          <input id="itinPhoto" type="file" accept="image/jpeg,image/png,image/webp">
-        </label>
-        <img id="itinPreview" alt="Itinerary screenshot" hidden>
-        <button type="button" class="clear" id="itinClear" hidden>Remove</button>
-      </div>
-      <label class="check" for="laundry"><input id="laundry" type="checkbox"> I can do laundry there</label>
+    <div class="gobox">
       <button class="go" id="goBtn" type="submit">Build my packing plan</button>
       <p class="status" id="status" role="status"></p>
-    </section>
+    </div>
   </form>
 
   <div class="col">
@@ -632,8 +698,81 @@ function fmtDate(s){const d=new Date(s+"T12:00:00");return isNaN(d)?s:d.toLocale
 function fmtDay(s){const d=new Date(s+"T12:00:00");return isNaN(d)?{dow:"",md:s}:{dow:d.toLocaleDateString(undefined,{weekday:"short"}),md:d.toLocaleDateString(undefined,{month:"short",day:"numeric"})}}
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function vol(i){return i.wear?0:(Number(i.qty)||1)*(Number(i.liters)||0)}
-function cleanItem(i){return {name:String(i.name).trim(),category:CATS.includes(i.category)?i.category:"Other",qty:Math.max(1,Math.round(Number(i.qty)||1)),liters:Math.max(0,Number(i.liters)||0),essential:i.essential!==false,wear:!!i.wear,note:i.note?String(i.note):""}}
+function cleanItem(i){return {name:String(i.name).trim(),category:CATS.includes(i.category)?i.category:"Other",qty:Math.max(1,Math.round(Number(i.qty)||1)),liters:Math.max(0,Number(i.liters)||0),essential:i.essential!==false,wear:!!i.wear,note:i.note?String(i.note):"",bag:Math.max(1,Math.round(Number(i.bag)||1))}}
 function cleanDays(d){return Array.isArray(d)?d.filter(x=>x&&(x.title||x.plans)).map(x=>({date:String(x.date||""),title:String(x.title||""),plans:String(x.plans||""),wear:String(x.wear||""),tip:String(x.tip||"")})):[]}
+
+/* ---------- bags and outfit style ---------- */
+const SIZES=[["15","Personal item"],["20","Backpack"],["40","Carry-on"],["70","Medium checked bag"],["100","Large checked bag"]];
+const STYLE_NAMES={mens:"Men's style",womens:"Women's style",neutral:"Any style"};
+function styleRule(s){
+  if(s==="mens") return "OUTFIT STYLE: men's clothing. Only suggest menswear. Never suggest dresses, skirts, blouses, heels or other womenswear.";
+  if(s==="womens") return "OUTFIT STYLE: women's clothing. Suggest womenswear; dresses and skirts are fine where they suit the day.";
+  return "OUTFIT STYLE: no preference. Suggest unisex pieces (shirts, tees, sweaters, pants, jackets, sneakers). Avoid dresses and skirts.";
+}
+function tripBags(t){return Array.isArray(t.bags)&&t.bags.length?t.bags:[{bagName:t.bagName,bagL:t.bagL}]}
+function bagOf(i,n){const b=Math.round(Number(i.bag)||1);return Math.min(Math.max(1,b),n)}
+function autoAssign(items,bags){ // spread items across bags by free space, biggest first
+  if(bags.length<2) return items.map(i=>({...i,bag:1}));
+  const free=bags.map(b=>b.bagL*0.85);
+  return [...items].sort((a,b)=>vol(b)-vol(a)).map(i=>{const k=free.indexOf(Math.max(...free)); free[k]-=vol(i); return {...i,bag:k+1}});
+}
+let activeBag=1;
+
+/* ---------- form errors: red * plus a short note on the field that needs fixing ---------- */
+function setErr(f,msg){
+  const box=document.querySelector(`[data-field="${f}"]`); if(!box) return;
+  box.classList.add("bad"); const n=box.querySelector(".ferr"); if(n) n.textContent=msg;
+  const inp=document.getElementById(f==="bag1"?"customL":f);
+  if(inp&&(f!=="bag1"||$("#useCustom").checked)) inp.setAttribute("aria-invalid","true");
+}
+function clearErr(box){ if(!box||!box.classList.contains("bad")) return; box.classList.remove("bad"); box.querySelectorAll("[aria-invalid]").forEach(x=>x.removeAttribute("aria-invalid")); const n=box.querySelector(".ferr"); if(n) n.textContent="" }
+function clearAllErr(){ document.querySelectorAll("[data-field].bad").forEach(clearErr) }
+function clearNear(e){
+  const box=e.target.closest&&e.target.closest("[data-field]"); clearErr(box);
+  if(e.target.id==="start") clearErr(document.querySelector('[data-field="end"]'));
+  if(!document.querySelector("[data-field].bad")&&$("#status").classList.contains("err")){$("#status").textContent="";$("#status").className="status"}
+}
+$("#tripForm").addEventListener("input",clearNear);
+$("#tripForm").addEventListener("change",clearNear);
+
+/* ---------- destination autocomplete (free Open-Meteo place search, no key needed) ---------- */
+const ALIAS={nyc:"New York",ny:"New York",la:"Los Angeles",sf:"San Francisco",dc:"Washington",vegas:"Las Vegas",nola:"New Orleans",philly:"Philadelphia",atl:"Atlanta",chi:"Chicago",slc:"Salt Lake City",kc:"Kansas City",sd:"San Diego",dfw:"Dallas",phx:"Phoenix",msp:"Minneapolis",bos:"Boston",sea:"Seattle",mia:"Miami",den:"Denver"};
+function expandAlias(s){const a=ALIAS[norm(s).replace(/[.\s]/g,"")]; return a||s}
+let acItems=[], acIdx=-1, acCtl=null, acTimer=null;
+function acClose(){$("#destList").hidden=true;$("#dest").setAttribute("aria-expanded","false");acIdx=-1}
+function acDraw(){
+  const ul=$("#destList");
+  if(!acItems.length){acClose();return}
+  ul.innerHTML=acItems.map((x,i)=>`<li role="option" id="ac${i}" data-i="${i}" aria-selected="${i===acIdx}">${esc(x.name)}<small>${esc(x.rest)}</small></li>`).join("");
+  ul.hidden=false; $("#dest").setAttribute("aria-expanded","true");
+  if(acIdx>=0) $("#dest").setAttribute("aria-activedescendant","ac"+acIdx); else $("#dest").removeAttribute("aria-activedescendant");
+}
+function acPick(i){const x=acItems[i]; if(!x) return; $("#dest").value=x.label; acItems=[]; acClose(); clearErr(document.querySelector('[data-field="dest"]'))}
+async function acFetch(q){
+  const term=expandAlias(q).trim();
+  if(term.length<2){acItems=[];acClose();return}
+  if(acCtl) acCtl.abort(); acCtl=new AbortController();
+  try{
+    const r=await fetch("https://geocoding-api.open-meteo.com/v1/search?count=10&language=en&format=json&name="+encodeURIComponent(term),{signal:acCtl.signal});
+    const d=await r.json(); const seen=new Set();
+    acItems=(d.results||[]).sort((a,b)=>(b.population||0)-(a.population||0)).map(x=>{
+      const parts=[x.name,x.admin1&&x.admin1!==x.name?x.admin1:"",x.country].filter(Boolean);
+      return {name:x.name,rest:parts.slice(1).join(", "),label:parts.join(", ")};
+    }).filter(x=>{if(seen.has(x.label))return false;seen.add(x.label);return true}).slice(0,6);
+    acIdx=-1; if(document.activeElement===$("#dest")) acDraw();
+  }catch(e){ if(!(e&&e.name==="AbortError")){acItems=[];acClose()} }
+}
+$("#dest").addEventListener("input",()=>{clearTimeout(acTimer); const v=$("#dest").value; acTimer=setTimeout(()=>acFetch(v),200)});
+$("#dest").addEventListener("keydown",e=>{
+  if($("#destList").hidden) return;
+  if(e.key==="ArrowDown"){e.preventDefault();acIdx=(acIdx+1)%acItems.length;acDraw()}
+  else if(e.key==="ArrowUp"){e.preventDefault();acIdx=acIdx<=0?acItems.length-1:acIdx-1;acDraw()}
+  else if(e.key==="Enter"&&acIdx>=0){e.preventDefault();acPick(acIdx)}
+  else if(e.key==="Escape"){acClose()}
+});
+$("#dest").addEventListener("blur",()=>setTimeout(acClose,150));
+$("#destList").addEventListener("mousedown",e=>e.preventDefault());
+$("#destList").addEventListener("click",e=>{const li=e.target.closest("li"); if(li) acPick(Number(li.dataset.i))});
 
 /* ---------- bag choice ---------- */
 let mode="pick", looked=null;
@@ -646,11 +785,28 @@ function currentBag(){
   const r=document.querySelector('input[name="bag"]:checked');
   return {bagName:r.dataset.name,bagL:Number(r.value)};
 }
-function showChosen(){
-  const b=currentBag();
-  $("#chosen").innerHTML = pending() ? (mode==="photo"?"Scan a photo, or switch back to pick a size.":"Look up your suitcase, or switch back to pick a size.") : `Planning for: <strong>${esc(b.bagName)} · ${b.bagL} L</strong>`;
-  $("#st1").className="step "+(pending()?"on":"done");
+function extraBags(){return [...$("#moreBags").querySelectorAll("select")].map(s=>{const o=SIZES.find(x=>x[0]===s.value)||SIZES[1];return {bagName:o[1],bagL:Number(o[0])}})}
+function allBags(){return [currentBag(),...extraBags()]}
+function drawMoreBags(vals){
+  const n=Number($("#bagCount").value)||1, box=$("#moreBags");
+  const prev=vals||[...box.querySelectorAll("select")].map(s=>s.value);
+  let h=`<p class="hint">Pack one bag at a time. Your suitcase splits the list across your bags and keeps travel-day essentials together.</p>`;
+  for(let k=2;k<=n;k++){
+    const v=prev[k-2]||"20";
+    h+=`<label for="bagSize${k}">Bag ${k}<select id="bagSize${k}">${SIZES.map(([l,nm])=>`<option value="${l}" ${l===v?"selected":""}>${nm} (about ${l} L)</option>`).join("")}</select></label>`;
+  }
+  box.innerHTML=h; box.hidden=n<2; $("#bag1Label").hidden=n<2;
+  showChosen();
 }
+function showChosen(){
+  const b=currentBag(), more=extraBags();
+  $("#chosen").innerHTML = pending() ? (mode==="photo"?"Scan a photo, or switch back to pick a size.":"Look up your suitcase, or switch back to pick a size.")
+    : more.length ? `Planning for: ${[b,...more].map((x,k)=>`<strong>Bag ${k+1}: ${esc(x.bagName)} · ${x.bagL} L</strong>`).join(", ")}`
+    : `Planning for: <strong>${esc(b.bagName)} · ${b.bagL} L</strong>`;
+  $("#st2").className="step "+(pending()?"on":"done");
+}
+$("#bagCount").addEventListener("change",()=>drawMoreBags());
+$("#moreBags").addEventListener("change",showChosen);
 function setTab(m){
   mode=m;
   [["pick","#tabPick","#panePick"],["photo","#tabPhoto","#panePhoto"],["model","#tabModel","#paneModel"]].forEach(([k,t,p])=>{
@@ -666,13 +822,14 @@ $("#customL").addEventListener("input",()=>{$("#useCustom").checked=!!$("#custom
 $("#useCustom").addEventListener("change",showChosen);
 
 /* ---------- render pack panel ---------- */
-function suitcaseSays(s,total,usable){
+function suitcaseSays(s,mine,total,usable,ab,nb){
   const t=s.trip, free=usable-total, w=s.weather;
   let cls="", lines=[];
+  if(nb>1) lines.push(`<p>I'm bag ${activeBag} of ${nb}, your ${esc(ab.bagName.toLowerCase())}. Pack me, then tap the next bag above.</p>`);
   if(total>usable){
     cls="bad";
     let need=total-usable, drops=[];
-    [...s.items].filter(i=>!i.essential&&!i.wear).sort((a,b)=>vol(b)-vol(a)).forEach(i=>{if(need>0){drops.push(i);need-=vol(i)}});
+    [...mine].filter(i=>!i.essential&&!i.wear).sort((a,b)=>vol(b)-vol(a)).forEach(i=>{if(need>0){drops.push(i);need-=vol(i)}});
     lines.push(`<p><strong>I can't close with all this.</strong> You're about ${(total-usable).toFixed(1)} L over.</p>`);
     if(drops.length) lines.push(`<p>Leave these behind and I'll zip:</p><ul>${drops.map(d=>`<li>${esc(d.name)} (${vol(d).toFixed(1)} L)</li>`).join("")}</ul>`);
     if(need>0) lines.push(`<p>${drops.length?"Even then it's tight. ":""}A bigger bag or a mid-trip laundry run would fix it.</p>`);
@@ -694,9 +851,13 @@ function suitcaseSays(s,total,usable){
 function render(){
   const s = state, t = s.trip, el = $("#result");
   const checked = store.get(key(t)) || {};
-  const usable = t.bagL*0.85;  // bags never pack to 100% of their stated volume
-  const total = s.items.reduce((a,i)=>a+vol(i),0);
-  const pct = Math.min(100, total/t.bagL*100);
+  const bags = tripBags(t), nb = bags.length;
+  if(activeBag>nb) activeBag=1;
+  const ab = bags[activeBag-1];
+  const mine = s.items.filter(i=>bagOf(i,nb)===activeBag);
+  const usable = ab.bagL*0.85;  // bags never pack to 100% of their stated volume
+  const total = mine.reduce((a,i)=>a+vol(i),0);
+  const pct = Math.min(100, total/ab.bagL*100);
   let cls="good", verdict="Fits with room to spare";
   if(total>usable*0.85){cls="warn";verdict="Fits, but it's snug"}
   if(total>usable){cls="bad";verdict="Won't fit as planned"}
@@ -716,32 +877,38 @@ function render(){
       <li class="day"><div class="when"><b>${esc(f.dow)}</b>${esc(f.md)}</div>
         <div><div class="t">${esc(d.title)}</div>${d.plans?`<div class="p">${esc(d.plans)}</div>`:""}${d.wear?`<div class="w"><span>Wear</span>${esc(d.wear)}</div>`:""}${d.tip?`<div class="tip"><span>${t.mode==="business"?"Style tip":"Tip"}</span>${esc(d.tip)}</div>`:""}</div></li>`}).join("")}</ol></div>` : "";
 
-  const done = s.items.filter(i=>checked[norm(i.name)]).length;
+  const allDone = s.items.filter(i=>checked[norm(i.name)]).length;
+  const done = mine.filter(i=>checked[norm(i.name)]).length;
   const byCat = {};
-  s.items.forEach((i,ix)=>{(byCat[i.category]=byCat[i.category]||[]).push([i,ix])});
+  s.items.forEach((i,ix)=>{ if(bagOf(i,nb)===activeBag) (byCat[i.category]=byCat[i.category]||[]).push([i,ix]) });
+  const tabsHtml = nb>1 ? `<div class="bagtabs" role="tablist" aria-label="Your bags">${bags.map((b,k)=>{
+      const its=s.items.filter(i=>bagOf(i,nb)===k+1), d=its.filter(i=>checked[norm(i.name)]).length;
+      return `<button type="button" role="tab" data-bagtab="${k+1}" aria-selected="${k+1===activeBag}">Bag ${k+1}<small>${esc(b.bagName)} · ${b.bagL} L · ${d} of ${its.length} packed</small></button>`}).join("")}</div>` : "";
 
   el.innerHTML = `
     <div class="res-head">
       <div style="min-width:0">
         <div class="phead"><span class="k">PACK</span>${s.example?'<span class="pill ex">Example trip</span>':'<h3>Your plan</h3>'}</div>
         <p class="dest">${esc(t.dest)}</p>
-        <div class="meta">${fmtDate(t.start)} → ${fmtDate(t.end)} · ${t.nights} night${t.nights===1?"":"s"} · ${esc(t.purpose)}</div>
+        <div class="meta">${fmtDate(t.start)} → ${fmtDate(t.end)} · ${t.nights} night${t.nights===1?"":"s"} · ${esc(t.purpose)}${t.style&&STYLE_NAMES[t.style]?" · "+STYLE_NAMES[t.style]:""}${nb>1?` · ${nb} bags`:""}</div>
       </div>
       <div class="unit" role="group" aria-label="Temperature unit">
         <button type="button" class="ghost" data-unit="F" aria-pressed="${unit==="F"}">°F</button>
         <button type="button" class="ghost" data-unit="C" aria-pressed="${unit==="C"}">°C</button>
       </div>
     </div>
-    ${suitcaseSays(s,total,usable)}
+    ${tabsHtml}
+    ${suitcaseSays(s,mine,total,usable,ab,nb)}
     ${wxHtml}
     ${daysHtml}
+    ${tabsHtml}
     <div class="gauge">
-      <div class="gtop"><span class="verdict ${cls}">${verdict}</span><strong>${total.toFixed(1)} L packed / ${t.bagL} L ${esc(t.bagName.toLowerCase())}</strong></div>
+      <div class="gtop"><span class="verdict ${cls}">${verdict}</span><strong>${nb>1?`Bag ${activeBag}: `:""}${total.toFixed(1)} L packed / ${ab.bagL} L ${esc(ab.bagName.toLowerCase())}</strong></div>
       <div class="bar" role="img" aria-label="Bag ${Math.round(pct)} percent full"><div class="fill ${cls==="good"?"":cls}" style="width:${pct}%"></div><div class="ticks"></div></div>
-      <div class="scale"><span>0 L</span><span>${Math.round(t.bagL/2)} L</span><span>${t.bagL} L</span></div>
-      <p class="hint">Volumes are rough estimates for folded or rolled items. Items marked "wear" go on you for the trip and take no bag space.</p>
+      <div class="scale"><span>0 L</span><span>${Math.round(ab.bagL/2)} L</span><span>${ab.bagL} L</span></div>
+      <p class="hint">Volumes are rough estimates for folded or rolled items. Items marked "wear" go on you for the trip and take no bag space.${nb>1?' Want something in a different bag? Tell your suitcase, like "move the laptop to bag 2".':""}</p>
     </div>
-    <div class="foot"><h2>Packing checklist</h2><span class="progress">${done} of ${s.items.length} packed</span></div>
+    <div class="foot"><h2>${nb>1?`Bag ${activeBag} checklist`:"Packing checklist"}</h2><span class="progress">${done} of ${mine.length} packed</span></div>
     <div class="cats">${CATS.filter(c=>byCat[c]).map(c=>`
       <div class="cat"><h3>${c}</h3><ul>${byCat[c].map(([i,ix])=>{const k=norm(i.name);return `
         <li class="item ${checked[k]?"done":""} ${justChanged.has(k)?"new":""}">
@@ -752,8 +919,8 @@ function render(){
     </div>
     ${s.tips&&s.tips.length?`<div class="cat"><h3>Packing tips</h3><ul class="tips">${s.tips.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}
   `;
-  $("#st2").className="step "+(s.example?"on":"done");
-  $("#st3").className="step "+(done===s.items.length&&!s.example?"done":"on");
+  $("#st1").className="step "+(s.example?"on":"done");
+  $("#st3").className="step "+(allDone===s.items.length&&!s.example?"done":"on");
   renderLook();
 }
 
@@ -852,6 +1019,7 @@ $("#result").addEventListener("change",e=>{
   const kk=key(state.trip), c=store.get(kk)||{}; c[k]=e.target.checked; store.set(kk,c); render();
 });
 $("#result").addEventListener("click",e=>{
+  const bt=e.target.closest("[data-bagtab]"); if(bt){activeBag=Number(bt.dataset.bagtab); render(); return}
   const u=e.target.closest("[data-unit]"); if(!u)return; unit=u.dataset.unit; store.set("pw-unit",unit); render();
 });
 
@@ -861,6 +1029,7 @@ $("#result").addEventListener("click",e=>{
   $("#start").value=iso(14); $("#end").value=iso(18); $("#start").min=iso(0);
   const draft=store.get("pw-form3"); if(draft){for(const k in draft){const f=$("#"+k); if(f){f.type==="checkbox"?f.checked=draft[k]:f.value=draft[k]}}}
   if(draft&&draft.bag){const r=document.querySelector(`input[name="bag"][value="${draft.bag}"]`); if(r) r.checked=true}
+  drawMoreBags(draft&&Array.isArray(draft.extraBags)?draft.extraBags:null);
 })();
 
 /* ---------- Claude ---------- */
@@ -877,10 +1046,12 @@ async function shrinkImage(file){
   finally{ URL.revokeObjectURL(url) }
 }
 function pullJson(text){
-  const t=String(text||"").replace(/^```(?:json)?\s*/i,"").replace(/```\s*$/,"");
-  try{return JSON.parse(t)}catch(e){}
+  const t=String(text||"").replace(/^[\s\S]*?```(?:json)?\s*/i,m=>/```/.test(m)?"":m).replace(/```[\s\S]*$/,"").trim();
+  const tries=[t];
   const a=t.indexOf("{"), b=t.lastIndexOf("}");
-  if(a>=0&&b>a){try{return JSON.parse(t.slice(a,b+1))}catch(e){}}
+  if(a>=0&&b>a) tries.push(t.slice(a,b+1));
+  for(const x of [...tries]) tries.push(x.replace(/,\s*([}\]])/g,"$1").replace(/[\u201C\u201D]/g,'"'));
+  for(const x of tries){ try{return JSON.parse(x)}catch(e){} }
   throw {code:"invalid_json"};
 }
 const samplePromise = Promise.resolve({
@@ -888,14 +1059,22 @@ const samplePromise = Promise.resolve({
   json: async(prompt,opts={})=>{
     const files=opts.images?(Array.isArray(opts.images)?opts.images:[opts.images]):[];
     const images=[]; for(const f of files.slice(0,2)) images.push(await shrinkImage(f));
-    let res;
-    try{
-      res=await fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},signal:opts.signal,
-        body:JSON.stringify({prompt:String(prompt),images,tier:opts.modelTier||"default"})});
-    }catch(e){ throw {code:e&&e.name==="AbortError"?"cancelled":"upstream_error"} }
-    const data=await res.json().catch(()=>({}));
-    if(!res.ok) throw {code:data.code||"upstream_error"};
-    return pullJson(data.text);
+    const call=async p=>{
+      let res;
+      try{
+        res=await fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},signal:opts.signal,
+          body:JSON.stringify({prompt:p,images,tier:opts.modelTier||"default"})});
+      }catch(e){ throw {code:e&&e.name==="AbortError"?"cancelled":"upstream_error"} }
+      const data=await res.json().catch(()=>({}));
+      if(!res.ok) throw {code:data.code||"upstream_error"};
+      return data.text;
+    };
+    // If the answer comes back garbled (often cut off because it ran long), quietly ask once more for a shorter, clean reply
+    try{ return pullJson(await call(String(prompt))) }
+    catch(err){
+      if(!err||err.code!=="invalid_json") throw err;
+      return pullJson(await call(String(prompt)+"\n\nIMPORTANT: Your reply must be only valid, complete JSON with nothing before or after it. Keep every text field short so the reply is not cut off."));
+    }
   }
 });
 const ERR = {
@@ -987,25 +1166,27 @@ $("#itinPhoto").addEventListener("change",e=>{
 $("#itinClear").onclick=()=>{itinFile=null;$("#itinPhoto").value="";$("#itinPreview").hidden=true;$("#itinClear").hidden=true};
 
 /* build plan */
-const ITEM_SCHEMA=`{"name":"...","category":"Clothing|Weather gear|Toiletries|Tech|Documents|Often forgotten|Other","qty":1,"liters":0.5,"essential":true,"wear":false,"note":""}`;
+const ITEM_SCHEMA=`{"name":"...","category":"Clothing|Weather gear|Toiletries|Tech|Documents|Often forgotten|Other","qty":1,"liters":0.5,"essential":true,"wear":false,"bag":1,"note":""}`;
 function buildPrompt(t,hasImg){
   const today = new Date().toISOString().slice(0,10);
+  const bags = tripBags(t), nb = bags.length;
   return `You are PackWise, a packing assistant for budget-conscious travelers.
 Today's date: ${today}.
 Trip: ${t.dest}, leaving ${t.start}, returning ${t.end} (${t.nights} nights). Trip type: ${t.purpose}. Laundry available: ${t.laundry?"yes":"no"}.
-Bag: ${t.bagName}, about ${t.bagL} liters.
-${t.itinerary?`Itinerary the traveler typed or pasted:\n"""${t.itinerary.slice(0,6000)}"""`:"No typed itinerary."}
-${hasImg?"An image of the traveler's itinerary is attached. Read every day, time, place and activity from it.":""}
+${nb>1?`The traveler is bringing ${nb} bags:\n${bags.map((b,k)=>`Bag ${k+1}: ${b.bagName}, about ${b.bagL} liters`).join("\n")}`:`Bag: ${t.bagName}, about ${t.bagL} liters.`}
+${styleRule(t.style)}
+${t.itinerary?`Extra details the traveler gave (plans, events, dress codes):\n"""${t.itinerary.slice(0,6000)}"""`:"No extra details typed."}
+${hasImg?"An image of the traveler's schedule or itinerary is attached. Read every day, time, place, event and dress code from it.":""}
 
 1. Weather from past years: describe what ${t.dest} has typically been like on these specific calendar dates (${t.start.slice(5)} to ${t.end.slice(5)}) over past years, from climate records you know. Give average high and low, how many of these days typically see rain or snow, and anything that often catches visitors off guard then. Never phrase it as a forecast.
 ${t.mode==="business"
 ? `MODE: BUSINESS TRIP. The traveler wants to look polished and make the right impression. Favor wrinkle-resistant, mix-and-match pieces that rewear well, and include work essentials (laptop and charger, business cards, a clicker if presenting, wrinkle-release spray or a travel steamer). For each day, add a "tip": one short style tip on color or fit for that day's setting, drawn from common color and dress conventions (e.g. navy tends to read as trustworthy and calm, a structured blazer reads as polished, softer colors feel approachable at team dinners). Phrase tips as style suggestions ("tends to", "usually comes across as"), never as guarantees or science.`
 : `MODE: PLEASURE TRIP. Focus on comfort, fun and versatile pieces that mix and match. For each day, add a "tip": one short, practical tip for enjoying that day (shoes for lots of walking, a layer for evenings, something for photos).`}
-2. Day-by-day plan: one entry per calendar day from ${t.start} to ${t.end}. Use the itinerary where it covers that day; otherwise infer a sensible day for this trip type. For each day say what to wear.
-3. Packing list sized to fit the bag, covering every day's activities. Give exact counts (e.g. 5 pairs of socks). Estimate each item's packed volume in liters per unit (folded or rolled). Mark bulky items to wear in transit "wear": true (no bag space). Mark nice-to-haves "essential": false. Include commonly forgotten items (toothbrush, razor, chargers, plug adapter if abroad, prescription medications, sunglasses) under "Often forgotten". 15-32 items. Notes under 8 words, only when useful (e.g. which day an item is for).
+2. Day-by-day plan: one entry per calendar day from ${t.start} to ${t.end}. Use the itinerary where it covers that day; otherwise infer a sensible day for this trip type. For each day say what to wear. If a day has several events with different settings (for example a morning pitch and an evening dinner), name each event in "wear", like "10am pitch: charcoal suit; 7pm dinner: navy blazer, dark jeans".
+3. Packing list sized to fit the bag, covering every day's activities. Give exact counts (e.g. 5 pairs of socks). Estimate each item's packed volume in liters per unit (folded or rolled). Mark bulky items to wear in transit "wear": true (no bag space). Mark nice-to-haves "essential": false. Include commonly forgotten items (toothbrush, razor, chargers, plug adapter if abroad, prescription medications, sunglasses) under "Often forgotten". ${nb>1?`Put every item in exactly one bag with "bag" (a number from 1 to ${nb}) so each bag can be packed on its own, and keep each bag under about 85% of its size. Keep travel-day essentials (ID, documents, chargers, medications, laptop) together in the smallest bag, since it usually stays with the traveler. 18-32 items.`:`Set "bag": 1 for every item. 15-28 items.`} Notes under 8 words, only when useful (e.g. which day an item is for).
 4. 2-4 short packing tips specific to this trip.
 
-Reply with only this JSON:
+Keep every text field short. Reply with only this JSON:
 {"weather":{"summary":"1-2 sentences in past-years framing","highF":0,"lowF":0,"highC":0,"lowC":0,"wetDays":"e.g. Usually 2 of these 5 days see rain","watchFor":"short phrase or empty"},
  "days":[{"date":"YYYY-MM-DD","title":"short","plans":"one sentence","wear":"short outfit","tip":"one short sentence"}],
  "items":[${ITEM_SCHEMA}],
@@ -1014,19 +1195,34 @@ Reply with only this JSON:
 
 $("#tripForm").addEventListener("submit",async e=>{
   e.preventDefault();
+  acClose();
   const st=$("#status"); st.className="status";
-  const dest=$("#dest").value.trim(), start=$("#start").value, end=$("#end").value;
-  if(pending()){st.textContent=mode==="photo"?"Scan your suitcase photo first, or switch to Pick a size.":"Look up your suitcase first, or switch to Pick a size.";st.classList.add("err");return}
-  if(!dest){st.textContent="Enter a destination.";st.classList.add("err");$("#dest").focus();return}
-  if(!start||!end||end<=start){st.textContent="Set a return date after your departure date.";st.classList.add("err");return}
-  if(nightsBetween(start,end)>30){st.textContent="Trips up to 30 nights work best for now.";st.classList.add("err");return}
-  const b=currentBag();
-  const t={mode:tripMode,dest,start,end,nights:nightsBetween(start,end),purpose:$("#purpose").value,itinerary:$("#itin").value.trim(),laundry:$("#laundry").checked,...b};
+  const dest=expandAlias($("#dest").value.trim()), start=$("#start").value, end=$("#end").value, style=$("#style").value;
+  // Check everything at once and mark each problem with a red * and a short note
+  clearAllErr();
+  const errs=[];
+  if(!dest) errs.push(["dest","Add where you're going."]);
+  if(!style) errs.push(["style","Pick an outfit style so your outfit ideas fit you."]);
+  if(!start) errs.push(["start","Pick the day you leave."]);
+  if(!end) errs.push(["end","Pick the day you come home."]);
+  else if(start&&end<=start) errs.push(["end","Your return date has to be after the day you leave."]);
+  else if(start&&nightsBetween(start,end)>30) errs.push(["end","Trips up to 30 nights work best for now."]);
+  if(pending()) errs.push(["bag1",mode==="photo"?"Scan your suitcase photo, or switch to Pick a size.":"Look up your suitcase, or switch to Pick a size."]);
+  else if(mode==="pick"&&$("#useCustom").checked&&!(Number($("#customL").value)>=5)) errs.push(["bag1","Enter your bag's size in liters (5 or more), or untick \"Know the exact size?\"."]);
+  if(errs.length){
+    errs.forEach(([f,m])=>setErr(f,m));
+    st.textContent=`Almost there. Fix the ${errs.length===1?"item":errs.length+" items"} marked with a red * above, then tap Build again.`; st.classList.add("err");
+    const first=document.querySelector(`[data-field="${errs[0][0]}"]`);
+    if(first){ first.scrollIntoView({behavior:"smooth",block:"center"}); const inp=first.querySelector("input:not([type=radio]):not([type=checkbox]):not([type=file]),select"); if(inp&&errs[0][0]!=="bag1") inp.focus({preventScroll:true}) }
+    return;
+  }
+  const b=currentBag(), bags=allBags();
+  const t={mode:tripMode,dest,start,end,nights:nightsBetween(start,end),purpose:$("#purpose").value,style,itinerary:$("#itin").value.trim(),laundry:$("#laundry").checked,...b,bags};
   const r0=document.querySelector('input[name="bag"]:checked');
-  store.set("pw-form3",{dest,start,end,purpose:t.purpose,itin:t.itinerary,laundry:t.laundry,customL:$("#customL").value,useCustom:$("#useCustom").checked,bag:r0&&r0.value});
+  store.set("pw-form3",{dest,start,end,purpose:t.purpose,style,itin:t.itinerary,laundry:t.laundry,customL:$("#customL").value,useCustom:$("#useCustom").checked,bag:r0&&r0.value,bagCount:$("#bagCount").value,extraBags:[...$("#moreBags").querySelectorAll("select")].map(s=>s.value)});
 
   const btn=$("#goBtn"); btn.disabled=true; btn.textContent="Building your plan…";
-  st.textContent=itinFile?"Reading your itinerary, checking past weather and fitting items to your bag. This can take a minute or two.":"Checking past weather for your dates and fitting items to your bag. This can take up to a minute.";
+  st.textContent=itinFile?"Reading your schedule, checking past weather and fitting items to your bag. This can take a minute or two.":"Checking past weather for your dates and fitting items to your bag. This can take up to a minute.";
   let result=null;
   try{
     const sample=await samplePromise;
@@ -1044,9 +1240,10 @@ $("#tripForm").addEventListener("submit",async e=>{
       btn.disabled=false; btn.textContent="Build my packing plan"; return;
     }
     result=fallbackList(t);
+    result.items=autoAssign(result.items,bags);
     st.textContent=(ERR[code]||"The AI helper wasn't reachable.")+" You're seeing a basic list without weather.";
   }
-  justChanged=new Set();
+  justChanged=new Set(); activeBag=1;
   state={trip:t,...result,chat:[]}; save(); render(); renderChat();
   btn.disabled=false; btn.textContent="Build my packing plan";
   if(window.matchMedia("(max-width:840px)").matches) $("#result").scrollIntoView({behavior:"smooth",block:"start"});
@@ -1060,7 +1257,7 @@ function applyChanges(r){
   (Array.isArray(r.remove)?r.remove:[]).forEach(n=>{const k=idx(n); if(k>=0){names.push("removed "+items[k].name);items.splice(k,1)}});
   (Array.isArray(r.update)?r.update:[]).forEach(u=>{if(!u||!u.name)return;const k=idx(u.name); if(k<0)return;
     const it={...items[k]}; if(u.qty!=null) it.qty=Math.max(1,Math.round(Number(u.qty)||it.qty)); if(u.note!=null) it.note=String(u.note);
-    if(u.essential!=null) it.essential=!!u.essential; if(u.wear!=null) it.wear=!!u.wear;
+    if(u.essential!=null) it.essential=!!u.essential; if(u.wear!=null) it.wear=!!u.wear; if(u.bag!=null) it.bag=Math.max(1,Math.round(Number(u.bag)||1));
     items[k]=it; names.push("updated "+it.name); justChanged.add(norm(it.name))});
   (Array.isArray(r.add)?r.add:[]).forEach(a=>{if(!a||!a.name)return; const it=cleanItem(a); const k=idx(it.name);
     if(k>=0) items[k]=it; else items.push(it); names.push("added "+it.name); justChanged.add(norm(it.name))});
@@ -1078,13 +1275,17 @@ $("#talkForm").addEventListener("submit",async e=>{
   const q=$("#q").value.trim(), st=$("#talkStatus"); st.className="status"; st.textContent="";
   if(!q){st.textContent="Type a message first.";return}
   const s=state, t=s.trip;
-  const list=s.items.map(i=>`- ${i.name} | qty ${i.qty} | ${i.liters} L each | ${i.category}${i.wear?" | worn":""}${i.essential?"":" | optional"}`).join("\n");
+  const bags=tripBags(t), nb=bags.length;
+  const list=s.items.map(i=>`- ${i.name} | qty ${i.qty} | ${i.liters} L each | ${i.category}${nb>1?" | bag "+bagOf(i,nb):""}${i.wear?" | worn":""}${i.essential?"":" | optional"}`).join("\n");
+  const bagLine=bags.map((b,k)=>{const p=s.items.filter(i=>bagOf(i,nb)===k+1).reduce((a,i)=>a+vol(i),0);return `${nb>1?`Bag ${k+1}: `:"Bag: "}${b.bagName}, ${b.bagL} L; about ${p.toFixed(1)} L packed (comfortable max ${(b.bagL*0.85).toFixed(1)} L)`}).join("\n");
   const days=(s.days||[]).map(d=>`${d.date}: ${d.title}. ${d.plans} Wear: ${d.wear}`).join("\n");
   const history=s.chat.slice(-10).map(m=>(m.who==="you"?"Traveler: ":"Suitcase: ")+m.text).join("\n");
   const total=s.items.reduce((a,i)=>a+vol(i),0);
   const prompt=`You are the traveler's suitcase in the PackWise app. Talk in first person ("I"), warm and brief.
 ${t.mode==="business"?"This is a BUSINESS trip: when it fits, coach them like a sharp work stylist (which jacket or colors suit a pitch, a client dinner, a conference), framing color and clothing effects as style tips, never guarantees.":"This is a PLEASURE trip: keep the focus on comfort, fun and versatile outfits."}
-Trip: ${t.dest}, ${t.start} to ${t.end} (${t.nights} nights), ${t.purpose}. Bag: ${t.bagName}, ${t.bagL} L; currently about ${total.toFixed(1)} L packed (comfortable max ${(t.bagL*0.85).toFixed(1)} L).
+${styleRule(t.style)}
+Trip: ${t.dest}, ${t.start} to ${t.end} (${t.nights} nights), ${t.purpose}.
+${bagLine}
 ${s.weather?`Past-years weather for these dates: ${s.weather.summary} Avg high ${Math.round(s.weather.highF)}F, low ${Math.round(s.weather.lowF)}F. ${s.weather.wetDays||""}`:"No weather info."}
 ${days?"Day-by-day plan:\n"+days:""}
 ${t.itinerary?"Original itinerary: "+t.itinerary.slice(0,2000):""}
@@ -1093,7 +1294,7 @@ ${list}
 ${history?"Conversation so far:\n"+history:""}
 New message from the traveler: """${q}"""
 
-If the message adds details (activities, events, places, people, dress codes, things a friend said, preferences) or asks for changes, update the list: add items, remove items, or change counts. Use exact existing names for remove/update. Keep the bag size in mind and say if it no longer fits. Only send "days" (the full updated array) if the day-by-day plan should change. Weather talk must be about past-years patterns, never a forecast.
+If the message adds details (activities, events, places, people, dress codes, things a friend said, preferences) or asks for changes, update the list: add items, remove items, or change counts. Use exact existing names for remove/update. Keep the bag size in mind and say if it no longer fits.${nb>1?` Every added item needs "bag" (1 to ${nb}). To move an item to another bag, send it in "update" with the new "bag" number.`:""} Only send "days" (the full updated array) if the day-by-day plan should change. Weather talk must be about past-years patterns, never a forecast.
 "reply" is what you say to them, under 90 words, plain text.
 
 Reply with only JSON:
@@ -1132,11 +1333,12 @@ const SLOT_WORDS=[
 const DEFAULT_PIECE={top:{name:"Shirt",hex:COLORS.white},bottom:{name:"Pants",hex:COLORS.charcoal},shoes:{name:"Shoes",hex:COLORS.brown}};
 function colorIn(s){const t=s.toLowerCase();const k=Object.keys(COLORS).sort((a,b)=>b.length-a.length).find(c=>t.includes(c));return k?COLORS[k]:null}
 function cap(s){s=String(s||"").trim();return s.charAt(0).toUpperCase()+s.slice(1)}
-function piecesFromWear(text){
+function piecesFromWear(text,allowDress){
   const out={};
   String(text||"").split(/[,;+]|\band\b|\bwith\b/i).forEach(part=>{
-    const p=part.trim(); if(!p) return; const low=p.toLowerCase();
+    const p=part.replace(/^[^:]*:\s*/,"").trim(); if(!p) return; const low=p.toLowerCase();
     for(const [slot,re] of SLOT_WORDS){
+      if(slot==="dress"&&!allowDress) continue;
       if(!re.test(low)||out[slot]) continue;
       const hex=colorIn(low)||(/jeans|denim/.test(low)?COLORS.denim:null);
       const name=cap(p.replace(/\bon the plane\b|\bagain\b|\bat night\b|\.$/gi,"").trim());
@@ -1154,10 +1356,10 @@ function fillOutfit(p){
   if(!o.shoes) o.shoes={...DEFAULT_PIECE.shoes};
   return o;
 }
-function guessOutfits(days){
+function guessOutfits(days,style){
   let first=null;
   return days.map((d,i)=>{
-    let p=/same .* as day one|same .* as day 1/i.test(d.wear)&&first?first:piecesFromWear(d.wear);
+    let p=/same .* as day one|same .* as day 1/i.test(d.wear)&&first?first:piecesFromWear(d.wear,style==="womens");
     const o=fillOutfit(p); if(i===0) first=p;
     return {date:d.date,occasion:d.title,pieces:o};
   });
@@ -1190,7 +1392,7 @@ function renderLook(){
   const s=state, el=$("#lookOut"); if(!el) return;
   const k=key(s.trip);
   const L = s.look && s.look.forKey===k ? s.look : null;
-  const outfits = L ? L.outfits : guessOutfits(s.days||[]);
+  const outfits = L ? L.outfits : guessOutfits(s.days||[],s.trip.style);
   if(!outfits.length){ el.innerHTML=`<p class="hint">Plan your trip first, then your outfits show up here, one for each day.</p>`; return; }
   const pal = L&&L.palette&&L.palette.length ? `<div class="pal"><h3>Your colors</h3><div class="chipset">${L.palette.map(c=>`<span class="sw"><i style="background:${c.hex}"></i>${esc(c.name)}</span>`).join("")}</div></div>` : "";
   const note = L&&L.note ? `<div class="voice">${SUITCASE}<div class="bubble"><p>${esc(L.note)}</p></div></div>` : "";
@@ -1228,17 +1430,19 @@ Trip: ${t.dest}, ${t.start} to ${t.end}, purpose: ${t.purpose}, ${t.mode==="busi
 Days:
 ${days}
 ${selfieFile?`The attached photo shows the traveler. Use ONLY their coloring (skin tone, hair color, eye color) and the style of clothes they're wearing to choose colors that flatter them. Never comment on their body, weight, age, attractiveness or who they are. If the photo shows no person, ignore it and say so in "note".`:"No photo was given, so choose versatile colors that suit the trip and the occasions."}
+${styleRule(t.style)}
 Reuse pieces across days so it packs light. Fit each outfit to that day's plans and weather.${t.mode==="business"?" For meetings or pitches, pick colors that read as confident and approachable.":""}
 Reply with only JSON:
 {"note":"two short friendly sentences on the colors you chose and why","palette":[{"name":"Navy","hex":"#22345C"}],"outfits":[{"date":"YYYY-MM-DD","occasion":"short label","pieces":{"top":{"name":"White oxford shirt","hex":"#F6F4EE"},"outer":{"name":"Navy blazer","hex":"#22345C"},"bottom":{"name":"Gray chinos","hex":"#8C9196"},"shoes":{"name":"Brown loafers","hex":"#6E4A2E"}}}]}
-Rules: one outfit per day listed, same dates. "pieces" uses only the keys top, outer, bottom, dress, shoes; use "dress" instead of top and bottom when a dress fits; leave out "outer" when no layer is needed. Palette has 3 to 5 colors. Every hex is a 6-digit color like #22345C.`;
+Rules: one outfit per day listed, same dates. "pieces" uses only the keys top, outer, bottom, dress, shoes; ${t.style==="womens"?'use "dress" instead of top and bottom when a dress fits;':'never use "dress";'} leave out "outer" when no layer is needed. Palette has 3 to 5 colors. Every hex is a 6-digit color like #22345C.`;
   try{
     const sample=await samplePromise; if(!sample) throw {code:"sampling_disabled"};
     const opts={modelTier:"default"}; if(selfieFile) opts.images=[selfieFile];
     const r=await sample.json(prompt,opts);
     if(!r||!Array.isArray(r.outfits)||!r.outfits.length) throw {code:"invalid_json"};
     const outfits=r.outfits.slice(0,14).map((o,i)=>{
-      const raw=o&&o.pieces||{}, p={};
+      const raw={...(o&&o.pieces||{})}, p={};
+      if(t.style!=="womens") delete raw.dress; // safety net: no dresses unless women's style was chosen
       ["top","outer","bottom","dress","shoes"].forEach(x=>{ if(raw[x]&&raw[x].name) p[x]={name:cap(String(raw[x].name).slice(0,60)),hex:safeHex(raw[x].hex,(DEFAULT_PIECE[x]||{hex:COLORS.charcoal}).hex)} });
       const d=s.days[i]||{};
       return {date:String(o.date||d.date||""),occasion:String(o.occasion||d.title||"").slice(0,60),pieces:fillOutfit(p)};
@@ -1264,7 +1468,7 @@ function setMode(m,initial){
   $("#chips").innerHTML=CHIPS[m].map(c=>`<button type="button">${esc(c)}</button>`).join("");
   $("#q").placeholder=m==="business"?"e.g. the client is pretty formal":"e.g. my friend says it gets windy at night";
   $("#itin").placeholder=m==="business"
-    ?"Tue: fly in, client dinner 7pm\nWed: 10am pitch, team lunch\nThu: follow-ups, fly home 5pm"
+    ?"Tue: fly in, client dinner 7pm\nWed: 10am pitch, team lunch\nThu: follow-ups, fly home 5pm\nDress code: business casual"
     :"Fri: fly out, beach afternoon\nSat: snorkel tour, nice dinner\nSun: brunch, fly home";
   if(!initial && state.example){ state = m==="business"?EXAMPLE_BIZ:EXAMPLE; justChanged=new Set(); render(); renderChat(); }
 }
@@ -1281,5 +1485,4 @@ renderChat();
 
 <script defer src="/_vercel/insights/script.js"></script>
 <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
-<script defer src="/_vercel/insights/script.js"></script>
 </body></html>
