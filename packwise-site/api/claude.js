@@ -7,11 +7,15 @@
 //   PACKWISE_MODEL      optional. Defaults to claude-sonnet-5-5.
 //   PACKWISE_QUICK_MODEL optional. Cheaper model for small jobs. Defaults to claude-haiku-5-5.
 //   PACKWISE_PER_MINUTE optional. Requests allowed per visitor per minute. Defaults to 8.
+//   PACKWISE_MAX_TOKENS optional. Longest answer allowed. Defaults to 16000.
 
 const API_URL = "https://api.anthropic.com/v1/messages";
 const MAX_PROMPT_CHARS = 24000;
 const MAX_IMAGES = 2;
 const MAX_IMAGE_CHARS = 2_000_000; // about 1.5 MB per image; the page shrinks photos first
+// A full plan (weather, every day, 20-30 items, several bags) is long. 4096 was cutting answers off mid-way,
+// which showed up as "garbled" or "couldn't help" errors. 16000 leaves plenty of room.
+const MAX_TOKENS = Number(process.env.PACKWISE_MAX_TOKENS) || 16000;
 
 // Simple per-visitor speed limit so one person can't run up the bill.
 // It resets whenever the server restarts, which is fine for a prototype.
@@ -71,8 +75,8 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model,
-        max_tokens: 4096,
-        system: "You are the AI inside PackWise, a travel packing app. When asked for JSON, reply with only valid JSON and nothing else.",
+        max_tokens: MAX_TOKENS,
+        system: "You are the AI inside PackWise, a travel packing app. When asked for JSON, reply with only valid JSON and nothing else: no code fences, no notes before or after. Keep text fields short.",
         messages: [{ role: "user", content }],
       }),
     });
@@ -87,8 +91,13 @@ export default async function handler(req, res) {
       return send(res, 502, { code: "upstream_error" });
     }
     const text = (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("");
-    if (!text) return send(res, 502, { code: "refused" });
-    return send(res, 200, { text });
+    if (data.stop_reason === "max_tokens") console.warn("Answer hit the length limit", MAX_TOKENS, "model", model);
+    if (!text) {
+      console.error("Empty answer from Claude", data.stop_reason);
+      // Only call it a refusal when Claude actually refused; anything else is worth a plain retry
+      return send(res, 502, { code: data.stop_reason === "refusal" ? "refused" : "upstream_error" });
+    }
+    return send(res, 200, { text, stop: data.stop_reason || "" });
   } catch (e) {
     console.error("Request to Claude failed", e);
     return send(res, 502, { code: "upstream_error" });
