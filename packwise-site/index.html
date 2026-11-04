@@ -275,7 +275,7 @@ button{font:inherit;cursor:pointer}
     <p>Imagine if your suitcase could talk to you.</p>
     <div class="what">Tell PackWise where you're going and it builds your packing list from the weather, checks that your bag fits, and talks you through packing.</div>
     <div class="vet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></svg>Veteran owned and operated</div>
-    <small>Never guess what to pack again. Prototype v0.10</small>
+    <small>Never guess what to pack again. Prototype v0.11</small>
   </div>
   <style>
   .hero .what{font-size:14.5px;line-height:1.45;color:var(--on-band);margin-top:8px;max-width:60ch}
@@ -639,6 +639,7 @@ button{font:inherit;cursor:pointer}
 :root[data-theme="dark"] .ofday b{color:var(--brand-2)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .ofday b{color:var(--brand-2)}}
 @media (max-width:420px){.lookup{grid-template-columns:96px minmax(0,1fr)}.selfie{width:96px;height:96px}}
+.sharebtn{width:100%}
 .fbcard{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 16px;padding:16px;border-radius:16px;background:var(--bubble);box-shadow:0 0 0 2px var(--accent) inset}
 .fbcard div{flex:1 1 220px;min-width:0}
 .fbcard b{display:block;font-size:16px}
@@ -1085,8 +1086,8 @@ function render(){
           <span class="vol">${i.wear?"—":vol(i).toFixed(1)+" L"}</span>
         </li>`}).join("")}</ul></div>`).join("")}
     </div>
-    ${s.tips&&s.tips.length?`<div class="cat"><h3>Packing tips</h3><ul class="tips">${s.tips.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}    ${s.example?"":``}
-    
+    ${s.tips&&s.tips.length?`<div class="cat"><h3>Packing tips</h3><ul class="tips">${s.tips.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}
+    ${s.example?"":`<button type="button" class="go sharebtn" id="shareBtn">Share my list</button>`}
     ${s.example?"":`<div class="fbcard">
       <div><b>How did PackWise do?</b><span>7 quick questions, about 2 minutes. Your honest feedback shapes what we build next.</span></div>
       <a class="go fbgo" href="${FEEDBACK_URL}" target="_blank" rel="noopener">Give feedback</a>
@@ -1196,6 +1197,7 @@ $("#result").addEventListener("click",e=>{
   const u=e.target.closest("[data-unit]"); if(!u)return; unit=u.dataset.unit; store.set("pw-unit",unit); render();
 });
 
+/* ---------- share my packing list (plain text, ends with a PackWise link) ---------- */
 $("#result").addEventListener("click",async e=>{
   if(!e.target.closest("#shareBtn")) return;
   const t=state.trip, bags=tripBags(t), nb=bags.length;
@@ -1211,7 +1213,8 @@ $("#result").addEventListener("click",async e=>{
     else {await navigator.clipboard.writeText(txt); alert("List copied. Paste it into a text or email.");}
   }catch(err){}
 });
-  /* ---------- form defaults ---------- */
+
+/* ---------- form defaults ---------- */
 (function(){
   const d=new Date(); const iso=x=>new Date(d.getTime()+x*86400000).toISOString().slice(0,10);
   $("#start").value=iso(14); $("#end").value=iso(18); $("#start").min=iso(0);
