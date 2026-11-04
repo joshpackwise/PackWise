@@ -1085,7 +1085,8 @@ function render(){
           <span class="vol">${i.wear?"—":vol(i).toFixed(1)+" L"}</span>
         </li>`}).join("")}</ul></div>`).join("")}
     </div>
-    ${s.tips&&s.tips.length?`<div class="cat"><h3>Packing tips</h3><ul class="tips">${s.tips.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}
+    ${s.tips&&s.tips.length?`<div class="cat"><h3>Packing tips</h3><ul class="tips">${s.tips.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}    ${s.example?"":``}
+    
     ${s.example?"":`<div class="fbcard">
       <div><b>How did PackWise do?</b><span>7 quick questions, about 2 minutes. Your honest feedback shapes what we build next.</span></div>
       <a class="go fbgo" href="${FEEDBACK_URL}" target="_blank" rel="noopener">Give feedback</a>
@@ -1195,7 +1196,22 @@ $("#result").addEventListener("click",e=>{
   const u=e.target.closest("[data-unit]"); if(!u)return; unit=u.dataset.unit; store.set("pw-unit",unit); render();
 });
 
-/* ---------- form defaults ---------- */
+$("#result").addEventListener("click",async e=>{
+  if(!e.target.closest("#shareBtn")) return;
+  const t=state.trip, bags=tripBags(t), nb=bags.length;
+  let txt=`My PackWise list for ${t.dest} (${fmtDate(t.start)} to ${fmtDate(t.end)})\n`;
+  bags.forEach((b,k)=>{
+    const its=state.items.filter(i=>bagOf(i,nb)===k+1);
+    if(nb>1) txt+=`\nBag ${k+1}: ${b.bagName}\n`;
+    CATS.forEach(c=>{const g=its.filter(i=>i.category===c); if(g.length){txt+=`\n${c}\n`+g.map(i=>`- ${i.qty>1?i.qty+" x ":""}${i.name}${i.wear?" (wear)":""}`).join("\n")+"\n"}});
+  });
+  txt+=`\nMade with PackWise: ${location.origin}`;
+  try{
+    if(navigator.share) await navigator.share({title:"My packing list",text:txt});
+    else {await navigator.clipboard.writeText(txt); alert("List copied. Paste it into a text or email.");}
+  }catch(err){}
+});
+  /* ---------- form defaults ---------- */
 (function(){
   const d=new Date(); const iso=x=>new Date(d.getTime()+x*86400000).toISOString().slice(0,10);
   $("#start").value=iso(14); $("#end").value=iso(18); $("#start").min=iso(0);
