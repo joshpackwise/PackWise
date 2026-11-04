@@ -275,7 +275,7 @@ button{font:inherit;cursor:pointer}
     <p>Imagine if your suitcase could talk to you.</p>
     <div class="what">Tell PackWise where you're going and it builds your packing list from the weather, checks that your bag fits, and talks you through packing.</div>
     <div class="vet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></svg>Veteran owned and operated</div>
-    <small>Never guess what to pack again. Prototype v0.11</small>
+    <small>Never guess what to pack again. Prototype v0.12</small>
   </div>
   <style>
   .hero .what{font-size:14.5px;line-height:1.45;color:var(--on-band);margin-top:8px;max-width:60ch}
@@ -343,6 +343,28 @@ button{font:inherit;cursor:pointer}
         <span class="hint">A few words is plenty. Your suitcase plans around it.</span>
         <span class="ferr" role="alert"></span>
       </label>
+      <div class="field">
+        <span class="flabel" id="travelH">How are you getting there?</span>
+        <div class="tmodes" role="radiogroup" aria-labelledby="travelH">
+          <button type="button" role="radio" data-travel="plane" aria-checked="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15.5v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0v5l-8 5v2l8-2.5V18l-2.5 1.8V21l4-1.2 4 1.2v-1.2L13 18v-5z" fill="currentColor"/></svg><span>Plane</span></button>
+          <button type="button" role="radio" data-travel="train" aria-checked="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 10h14" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="13.5" r="1.2" fill="currentColor"/><circle cx="15" cy="13.5" r="1.2" fill="currentColor"/><path d="M8 17l-2 4M16 17l2 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Train</span></button>
+          <button type="button" role="radio" data-travel="car" aria-checked="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16v-4l2-5h12l2 5v4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M4 12h16" stroke="currentColor" stroke-width="2"/><circle cx="7.5" cy="17" r="2" fill="currentColor"/><circle cx="16.5" cy="17" r="2" fill="currentColor"/></svg><span>Car</span></button>
+          <button type="button" role="radio" data-travel="other" aria-checked="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="13" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 11h16" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="19" r="1.6" fill="currentColor"/><circle cx="16" cy="19" r="1.6" fill="currentColor"/></svg><span>Bus, boat or other</span></button>
+        </div>
+      </div>
+      <div class="flybox" id="flyBox">
+        <label for="airport">Flying out of <span class="hint">Optional. We'll check your bag against your airline's rules.</span></label>
+        <div class="airrow">
+          <input id="airport" placeholder="Airport or code, e.g. ORD or Heathrow" autocomplete="off">
+          <button type="button" class="ghost" id="airBtn">Find airlines</button>
+        </div>
+        <p class="status" id="airStatus" role="status"></p>
+        <div id="airList" hidden>
+          <p class="airhead" id="airHead"></p>
+          <div class="airchips" id="airChips" role="radiogroup" aria-label="Your airline"></div>
+          <p class="hint" id="airNote"></p>
+        </div>
+      </div>
       <div class="extra">
         <h3>Anything else we should know?</h3>
         <label for="itin">Plans, events or dress codes <span class="hint">Optional. The more you tell us, the better your outfits.</span>
@@ -538,6 +560,41 @@ button{font:inherit;cursor:pointer}
     @keyframes pwfade{from{opacity:0;transform:translateX(6px)}to{opacity:1;transform:none}}
     .modeband svg *{transform-box:fill-box;transform-origin:center}
     @media (prefers-reduced-motion:reduce){.modeband.swap svg>*,.modeband.swap div{animation:none}}
+
+    /* how you're traveling */
+    .flabel{font-weight:600;font-size:13.5px}
+    .tmodes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+    .tmodes button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:72px;padding:8px 4px;border-radius:14px;border:2px solid var(--line);background:var(--soft);color:var(--ink);font-size:12.5px;font-weight:600;line-height:1.2;text-align:center}
+    .tmodes button svg{width:24px;height:24px}
+    .tmodes button[aria-checked="true"]{background:var(--brand-deep);border-color:var(--brand-deep);color:var(--on-brand)}
+    @media (max-width:400px){.tmodes{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    .flybox{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:16px;background:var(--sky-soft);color:#1D2A28}
+    .flybox label{color:#1D2A28}
+    .flybox .hint{color:#3B4A47}
+    .flybox input{background:#FFFFFF;color:#1D2A28}
+    .airrow{display:flex;gap:8px;flex-wrap:wrap}
+    .airrow input{flex:1 1 180px}
+    .airrow .ghost{background:var(--sky);color:var(--on-sky);border-color:var(--sky);min-height:44px}
+    .flybox .status{color:#3B4A47}
+    .flybox .status.err{color:#B3261E}
+    .airhead{margin:0;font-size:13px;font-weight:600}
+    .airchips{display:flex;flex-wrap:wrap;gap:6px}
+    .airchips button{border:2px solid #D3DEE8;background:#FFFFFF;color:#1D2A28;font-size:13px;font-weight:600;padding:8px 14px;border-radius:999px;min-height:44px}
+    .airchips button[aria-checked="true"]{background:var(--brand-deep);border-color:var(--brand-deep);color:#FFFFFF}
+    /* airline check card in the plan */
+    .aircheck{display:flex;flex-direction:column;gap:10px;padding:14px 16px;border-radius:16px;background:var(--mint);box-shadow:0 0 0 2px var(--brand-deep) inset}
+    .aircheck.warn{background:var(--bubble);box-shadow:0 0 0 2px var(--accent-deep) inset}
+    .achead{display:flex;align-items:center;gap:10px}
+    .acicon{width:34px;height:34px;border-radius:50%;flex:none;display:grid;place-items:center;background:var(--brand-deep);color:#fff;font-weight:700;font-size:18px}
+    .aircheck.warn .acicon{background:var(--warn)}
+    .achead b{display:block;font-size:15.5px}
+    .achead div>span{display:block;font-size:12.5px;color:var(--muted)}
+    .acrows{display:flex;flex-direction:column;gap:6px}
+    .acrow{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:8px 10px;border-radius:10px;background:var(--surface)}
+    .acrow b{font-weight:600}
+    .acrow .over{color:var(--bad);font-weight:600}
+    .acrow span{text-align:right}
+    .acnote{margin:0;font-size:12px;color:var(--muted)}
 
     /* business days without a schedule */
     .daynote{margin:0 0 4px}
@@ -945,15 +1002,18 @@ $("#destList").addEventListener("click",e=>{const li=e.target.closest("li"); if(
 /* ---------- bag choice ---------- */
 let mode="pick", looked=null;
 function pending(){ return (mode==="photo"&&!scanned)||(mode==="model"&&!looked) }
+/* typical outside size (inches) for each picture size, used by the airline check */
+const BAG_DIMS={"15":[16,12,6],"20":[18,13,8],"40":[22,14,9],"70":[26,18,11],"100":[29,20,12]};
 function currentBag(){
-  if(mode==="photo" && scanned) return {bagName:"Your scanned bag",bagL:scanned.liters};
-  if(mode==="model" && looked) return {bagName:looked.name,bagL:looked.liters};
+  if(mode==="photo" && scanned) return {bagName:"Your scanned bag",bagL:scanned.liters,dims:scanned.dims||null};
+  if(mode==="model" && looked) return {bagName:looked.name,bagL:looked.liters,dims:looked.dims||null};
   const custom=Number($("#customL").value);
-  if($("#useCustom").checked && custom>=5) return {bagName:"Your bag",bagL:Math.round(custom)};
+  if($("#useCustom").checked && custom>=5) return {bagName:"Your bag",bagL:Math.round(custom),dims:null};
   const r=document.querySelector('input[name="bag"]:checked');
-  return {bagName:r.dataset.name,bagL:Number(r.value)};
+  return {bagName:r.dataset.name,bagL:Number(r.value),dims:BAG_DIMS[r.value]||null};
 }
-function extraBags(){return [...$("#moreBags").querySelectorAll("select")].map(s=>{const o=SIZES.find(x=>x[0]===s.value)||SIZES[1];return {bagName:o[1],bagL:Number(o[0])}})}
+function extraBags(){return [...$("#moreBags").querySelectorAll("select")].map(s=>{const o=SIZES.find(x=>x[0]===s.value)||SIZES[1];return {bagName:o[1],bagL:Number(o[0]),dims:BAG_DIMS[o[0]]||null}})}
+function goodDims(a){return Array.isArray(a)&&a.length===3&&a.every(x=>Number(x)>0)?a.map(Number):null}
 function allBags(){return [currentBag(),...extraBags()]}
 function drawMoreBags(vals){
   const n=Number($("#bagCount").value)||1, box=$("#moreBags");
@@ -1059,7 +1119,7 @@ function render(){
       <div style="min-width:0">
         <div class="phead"><span class="k">PACK</span>${s.example?'<span class="pill ex">Example trip</span>':'<h3>Your plan</h3>'}</div>
         <p class="dest">${esc(t.dest)}</p>
-        <div class="meta">${fmtDate(t.start)} → ${fmtDate(t.end)} · ${t.nights} night${t.nights===1?"":"s"} · ${esc(t.purpose)}${t.style&&STYLE_NAMES[t.style]?" · "+STYLE_NAMES[t.style]:""}${nb>1?` · ${nb} bags`:""}</div>
+        <div class="meta">${fmtDate(t.start)} → ${fmtDate(t.end)} · ${t.nights} night${t.nights===1?"":"s"} · ${esc(t.purpose)}${t.style&&STYLE_NAMES[t.style]?" · "+STYLE_NAMES[t.style]:""}${t.travel&&TRAVEL_NAMES[t.travel]?" · "+TRAVEL_NAMES[t.travel]:""}${t.airline?" · "+esc(t.airline.name):""}${nb>1?` · ${nb} bags`:""}</div>
       </div>
       <div class="unit" role="group" aria-label="Temperature unit">
         <button type="button" class="ghost" data-unit="F" aria-pressed="${unit==="F"}">°F</button>
@@ -1068,6 +1128,7 @@ function render(){
     </div>
     ${tabsHtml}
     ${suitcaseSays(s,mine,total,usable,ab,nb)}
+    ${airlineCheck(t,ab,mine)}
     ${wxHtml}
     ${daysHtml}
     ${tabsHtml}
@@ -1214,6 +1275,108 @@ $("#result").addEventListener("click",async e=>{
   }catch(err){}
 });
 
+/* ---------- how you're traveling + airport and airline lookup ---------- */
+const TRAVEL_NAMES={plane:"By plane",train:"By train",car:"By car",other:"By bus, boat or other"};
+let travel=["plane","train","car","other"].includes(store.get("pw-travel"))?store.get("pw-travel"):"plane";
+let airInfo=store.get("pw-air")||null;   // last airport lookup: {airport,code,country,airlines:[...]}
+let airlineName=store.get("pw-airline")||"";
+function setTravel(m){
+  travel=m; store.set("pw-travel",m);
+  document.querySelectorAll("[data-travel]").forEach(b=>b.setAttribute("aria-checked",b.dataset.travel===m));
+  $("#flyBox").hidden=m!=="plane";
+}
+document.querySelectorAll("[data-travel]").forEach(b=>b.addEventListener("click",()=>setTravel(b.dataset.travel)));
+function chosenAirline(){return airInfo&&airInfo.airlines?airInfo.airlines.find(a=>a.name===airlineName)||null:null}
+function drawAirlines(){
+  if(!airInfo||!Array.isArray(airInfo.airlines)||!airInfo.airlines.length){$("#airList").hidden=true;return}
+  $("#airHead").textContent=`Airlines at ${airInfo.airport}. Tap yours:`;
+  $("#airChips").innerHTML=airInfo.airlines.map((a,i)=>`<button type="button" role="radio" data-air="${i}" aria-checked="${a.name===airlineName}">${esc(a.name)}</button>`).join("");
+  const a=chosenAirline();
+  $("#airNote").textContent=a?`Got it: ${a.name}. Your plan will check your bag against their rules.`:"Pick your airline and your plan will check your bag against their rules.";
+  $("#airList").hidden=false;
+}
+$("#airChips").addEventListener("click",e=>{
+  const b=e.target.closest("[data-air]"); if(!b) return;
+  const a=airInfo.airlines[Number(b.dataset.air)]; if(!a) return;
+  airlineName=a.name; store.set("pw-airline",airlineName); drawAirlines();
+});
+$("#airport").addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventDefault();$("#airBtn").click()} });
+$("#airBtn").addEventListener("click",async()=>{
+  const q=$("#airport").value.trim(), st=$("#airStatus"), btn=$("#airBtn"); st.className="status";
+  if(!q){st.textContent="Type your airport or its code first, like ORD.";st.classList.add("err");return}
+  btn.disabled=true; st.textContent="Finding airlines and their bag rules…"; $("#airList").hidden=true;
+  try{
+    const sample=await samplePromise; if(!sample) throw {code:"sampling_disabled"};
+    const r=await sample.json(`A traveler says they are flying out of: """${q.slice(0,120)}"""
+Identify the airport. List up to 10 airlines with regular passenger flights from it, biggest first.
+For each airline give its standard economy (not basic economy) bag rules from the airline's published policy as you know it:
+- carryOnIn: carry-on max size in inches [height, width, depth], including wheels and handles
+- carryOnKg: carry-on weight limit in kg, or null if the airline has no carry-on weight limit
+- personalIn: personal item max size in inches [height, width, depth], or null if the airline doesn't publish one
+- checkedKg: checked bag weight limit in kg for economy
+- fareNote: if the cheapest fare (like basic economy) drops the free carry-on, say so in a few words; else ""
+If you can't tell which airport this is, set found to false.
+Reply with only JSON: {"found":true,"airport":"Full name (CODE)","code":"ORD","country":"United States","airlines":[{"name":"","carryOnIn":[22,14,9],"carryOnKg":null,"personalIn":[17,10,9],"checkedKg":23,"fareNote":""}]}`,{modelTier:"default",cache:{gcTime:86400000}});
+    if(!r||r.found===false||!Array.isArray(r.airlines)||!r.airlines.length){
+      st.textContent="I couldn't find that airport. Try its 3-letter code, like ORD or LHR."; st.classList.add("err"); return;
+    }
+    airInfo={airport:String(r.airport||q).slice(0,80),code:String(r.code||"").slice(0,4),country:String(r.country||"").slice(0,40),
+      airlines:r.airlines.filter(a=>a&&a.name).slice(0,10).map(a=>({name:String(a.name).slice(0,40),carryOnIn:goodDims(a.carryOnIn),
+        carryOnKg:Number(a.carryOnKg)>0?Number(a.carryOnKg):null,personalIn:goodDims(a.personalIn),checkedKg:Number(a.checkedKg)>0?Number(a.checkedKg):null,fareNote:String(a.fareNote||"").slice(0,120)}))};
+    store.set("pw-air",airInfo);
+    if(!chosenAirline()){airlineName="";store.set("pw-airline","")}
+    st.textContent=""; drawAirlines();
+  }catch(err){
+    const code=err&&err.code; st.textContent=ERR[code]||"The lookup didn't go through. Try again."; st.classList.add("err");
+  }finally{btn.disabled=false}
+});
+
+/* estimated packed weight of one bag: empty bag plus about 0.2 kg per liter of packed clothes */
+function estKg(bag,items){
+  const empty=bag.bagL<=25?1:bag.bagL<=50?3.2:bag.bagL<=80?4.2:5.2;
+  return Math.round((empty+items.reduce((a,i)=>a+vol(i),0)*0.2)*10)/10;
+}
+const toLb=k=>Math.round(k*2.205);
+const inTxt=d=>d.map(x=>Math.round(x*10)/10).join(" × ")+"″";
+const cmTxt=d=>d.map(x=>Math.round(x*2.54)).join(" × ")+" cm";
+function fitsIn(d,lim){const a=[...d].sort((x,y)=>y-x), b=[...lim].sort((x,y)=>y-x); return a.map((v,i)=>v-b[i])}
+function airlineCheck(t,ab,mine){
+  if(t.travel!=="plane"||!t.airline) return "";
+  const a=t.airline, kg=estKg(ab,mine), kind=ab.bagL<=25?"personal":ab.bagL<=50?"carry":"checked";
+  const kindName={personal:"personal item",carry:"carry-on",checked:"checked bag"}[kind];
+  const rows=[], issues=[];
+  if(kind==="checked"){
+    rows.push(["Your bag (estimated)",`${kg} kg (${toLb(kg)} lb)`,false]);
+    if(a.checkedKg){const over=kg>a.checkedKg; rows.push(["Checked bag limit",`${a.checkedKg} kg (${toLb(a.checkedKg)} lb)`,over]); if(over) issues.push(`about ${(kg-a.checkedKg).toFixed(1)} kg over the checked bag limit`)}
+  } else {
+    const lim=kind==="personal"?a.personalIn:a.carryOnIn;
+    if(ab.dims&&lim){
+      const diff=fitsIn(ab.dims,lim), over=diff.some(v=>v>0.25);
+      rows.push(["Your bag",`${inTxt(ab.dims)} (${cmTxt(ab.dims)})`,false]);
+      rows.push([`${kind==="personal"?"Personal item":"Carry-on"} size limit`,`${inTxt(lim)} (${cmTxt(lim)})`,over]);
+      if(over) issues.push("bigger than their size limit");
+    } else if(!lim){
+      rows.push(["Size limit",kind==="personal"?"No published size. It just has to fit under the seat.":"Not listed for this airline",false]);
+    } else {
+      rows.push(["Size","We need your bag's measurements to check size. Try Snap a photo or Search your bag.",false]);
+    }
+    if(kind==="carry"){
+      if(a.carryOnKg){const over=kg>a.carryOnKg; rows.push(["Weight (estimated)",`${kg} kg (${toLb(kg)} lb) / limit ${a.carryOnKg} kg (${toLb(a.carryOnKg)} lb)`,over]); if(over) issues.push(`about ${(kg-a.carryOnKg).toFixed(1)} kg over the weight limit`)}
+      else rows.push(["Weight","No carry-on weight limit",false]);
+    }
+  }
+  const warn=issues.length>0;
+  const head=warn?`Heads up: your ${kindName} may not pass`:`Your ${kindName} fits ${a.name}'s rules`;
+  const sub=warn?`It looks ${issues.join(" and ")}.`:(t.airport?`Flying ${a.name} out of ${t.airport}`:`Flying ${a.name}`);
+  return `<div class="aircheck ${warn?"warn":""}">
+    <div class="achead"><span class="acicon" aria-hidden="true">${warn?"!":"✓"}</span><div><b>${esc(head)}</b><span>${esc(sub)}</span></div></div>
+    <div class="acrows">${rows.map(([l,v,o])=>`<div class="acrow"><b>${esc(l)}</b><span class="${o?"over":""}">${esc(v)}</span></div>`).join("")}</div>
+    ${a.fareNote?`<p class="acnote"><strong>Cheapest fares:</strong> ${esc(a.fareNote)}</p>`:""}
+    ${warn&&kind!=="checked"?`<p class="acnote">Tip: wear your heaviest shoes and jacket on the plane, or move heavy items to a different bag.</p>`:""}
+    <p class="acnote">Weight is an estimate from your packing list. Airlines change their rules, so double-check on ${esc(a.name)}'s website before you fly.</p>
+  </div>`;
+}
+
 /* ---------- form defaults ---------- */
 (function(){
   const d=new Date(); const iso=x=>new Date(d.getTime()+x*86400000).toISOString().slice(0,10);
@@ -1221,6 +1384,7 @@ $("#result").addEventListener("click",async e=>{
   const draft=store.get("pw-form3"); if(draft){for(const k in draft){const f=$("#"+k); if(f){f.type==="checkbox"?f.checked=draft[k]:f.value=draft[k]}}}
   if(draft&&draft.bag){const r=document.querySelector(`input[name="bag"][value="${draft.bag}"]`); if(r) r.checked=true}
   drawMoreBags(draft&&Array.isArray(draft.extraBags)?draft.extraBags:null);
+  setTravel(travel); drawAirlines();
 })();
 
 /* ---------- Claude ---------- */
@@ -1309,7 +1473,7 @@ If you can't see a bag or the reference item, set liters to 0 and say in "note" 
 Reply with only JSON: {"heightIn":0,"widthIn":0,"depthIn":0,"liters":0,"confidence":"low|medium|high","note":"one short sentence"}`,{images:photoFile,modelTier:"default"});
     const L=Math.round(Number(r&&r.liters)||0);
     if(L<5){st.textContent=(r&&r.note)||"I couldn't make out the bag and the reference object. Try another photo.";st.classList.add("err");return}
-    scanned={liters:Math.min(200,L)};
+    scanned={liters:Math.min(200,L),dims:goodDims([r.heightIn,r.widthIn,r.depthIn])};
     $("#scanRes").innerHTML=`About <strong>${Math.round(r.heightIn)}″ × ${Math.round(r.widthIn)}″ × ${Math.round(r.depthIn)}″</strong>, roughly <strong>${scanned.liters} L</strong> of packing space. Confidence: ${esc(r.confidence||"low")}.${r.note?`<br><span class="hint">${esc(r.note)}</span>`:""}`;
     $("#scanRes").hidden=false; st.textContent=""; showChosen();
   }catch(err){
@@ -1335,7 +1499,7 @@ Reply with only JSON: {"found":true,"brand":"","model":"","bagType":"carry-on|ch
       st.textContent=(r&&r.note)||"I couldn't find that model. Check the spelling or add the size, or pick the closest size instead."; st.classList.add("err"); return;
     }
     const name=[r.brand,r.model].filter(Boolean).join(" ")||q;
-    looked={liters:Math.min(200,L),name};
+    looked={liters:Math.min(200,L),name,dims:goodDims([r.heightIn,r.widthIn,r.depthIn])};
     const conf=r.confidence||"low";
     const dims=(r.heightIn&&r.widthIn&&r.depthIn)?`<strong>${Number(r.heightIn)}″ × ${Number(r.widthIn)}″ × ${Number(r.depthIn)}″</strong>, `:"";
     $("#modelRes").innerHTML=`<strong>${esc(name)}</strong><br>${dims}about <strong>${looked.liters} L</strong>${r.expandedLiters?` (${Math.round(r.expandedLiters)} L expanded)`:""}.
@@ -1357,6 +1521,13 @@ $("#itinPhoto").addEventListener("change",e=>{
 $("#itinClear").onclick=()=>{itinFile=null;$("#itinPhoto").value="";$("#itinPreview").hidden=true;$("#itinClear").hidden=true};
 
 /* build plan */
+function travelRule(t){
+  if(t.travel==="plane") return `TRAVEL: by plane${t.airline?` on ${t.airline.name}${t.airport?" from "+t.airport:""}`:""}. Keep carry-on liquids in 3.4 oz (100 ml) bottles in one clear quart bag, keep medications, chargers, ID and valuables in the carry-on, and wear the bulkiest shoes and jacket on the flight.`;
+  if(t.travel==="train") return "TRAVEL: by train. There are usually no strict bag rules, but the traveler carries and lifts their own bags onto racks, so favor a lighter load, plus snacks, a water bottle, headphones and a charger for the ride. Don't mention airline or liquids rules.";
+  if(t.travel==="car") return "TRAVEL: by car (road trip). Space and weight matter less, so it's fine to add road-trip extras like a cooler, snacks and drinks, a phone mount, a car charger and a travel pillow. Don't mention airline or liquids rules.";
+  if(t.travel==="other") return "TRAVEL: by bus, boat or another way. Give general travel advice that fits ground or sea travel, and don't mention airline rules.";
+  return "";
+}
 const ITEM_SCHEMA=`{"name":"...","category":"Clothing|Weather gear|Toiletries|Tech|Documents|Often forgotten|Other","qty":1,"liters":0.5,"essential":true,"wear":false,"bag":1,"note":""}`;
 function buildPrompt(t,hasImg){
   const today = new Date().toISOString().slice(0,10);
@@ -1364,6 +1535,7 @@ function buildPrompt(t,hasImg){
   return `You are PackWise, a packing assistant for budget-conscious travelers.
 Today's date: ${today}.
 Trip: ${t.dest}, leaving ${t.start}, returning ${t.end} (${t.nights} nights). Trip type: ${t.purpose}${t.customPurpose?" (typed by the traveler in their own words: tailor the days, outfits and list to it)":""}. Laundry available: ${t.laundry?"yes":"no"}.
+${travelRule(t)}
 ${nb>1?`The traveler is bringing ${nb} bags:\n${bags.map((b,k)=>`Bag ${k+1}: ${b.bagName}, about ${b.bagL} liters`).join("\n")}`:`Bag: ${t.bagName}, about ${t.bagL} liters.`}
 ${styleRule(t.style)}
 ${t.itinerary?`Extra details the traveler gave (plans, events, dress codes):\n"""${t.itinerary.slice(0,6000)}"""`:"No extra details typed."}
@@ -1412,8 +1584,11 @@ $("#tripForm").addEventListener("submit",async e=>{
   const b=currentBag(), bags=allBags();
   const t={mode:tripMode,dest,start,end,nights:nightsBetween(start,end),purpose:isOther?otherTxt:$("#purpose").value,customPurpose:isOther,style,itinerary:$("#itin").value.trim(),laundry:$("#laundry").checked,...b,bags};
   t.hasSchedule=!!(t.itinerary||itinFile);
+  t.travel=travel;
+  const al=travel==="plane"?chosenAirline():null;
+  if(al){t.airline=al; t.airport=airInfo.airport}
   const r0=document.querySelector('input[name="bag"]:checked');
-  store.set("pw-form3",{dest,start,end,purpose:$("#purpose").value,purposeOther:otherTxt,style,itin:t.itinerary,laundry:t.laundry,customL:$("#customL").value,useCustom:$("#useCustom").checked,bag:r0&&r0.value,bagCount:$("#bagCount").value,extraBags:[...$("#moreBags").querySelectorAll("select")].map(s=>s.value)});
+  store.set("pw-form3",{dest,start,end,purpose:$("#purpose").value,purposeOther:otherTxt,airport:$("#airport").value,style,itin:t.itinerary,laundry:t.laundry,customL:$("#customL").value,useCustom:$("#useCustom").checked,bag:r0&&r0.value,bagCount:$("#bagCount").value,extraBags:[...$("#moreBags").querySelectorAll("select")].map(s=>s.value)});
 
   const btn=$("#goBtn"); st.textContent="";
   startLoading(!!itinFile,bags.length);
@@ -1479,6 +1654,7 @@ $("#talkForm").addEventListener("submit",async e=>{
 ${t.mode==="business"?"This is a BUSINESS trip: when it fits, coach them like a sharp work stylist (which jacket or colors suit a pitch, a client dinner, a conference), framing color and clothing effects as style tips, never guarantees.":"This is a PLEASURE trip: keep the focus on comfort, fun and versatile outfits."}
 ${styleRule(t.style)}
 Trip: ${t.dest}, ${t.start} to ${t.end} (${t.nights} nights), ${t.purpose}.
+${travelRule(t)}
 ${bagLine}
 ${s.weather?`Past-years weather for these dates: ${s.weather.summary} Avg high ${Math.round(s.weather.highF)}F, low ${Math.round(s.weather.lowF)}F. ${s.weather.wetDays||""}`:"No weather info."}
 ${days?"Day-by-day plan:\n"+days:""}
