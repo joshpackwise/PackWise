@@ -275,7 +275,7 @@ button{font:inherit;cursor:pointer}
     <p>Imagine if your suitcase could talk to you.</p>
     <div class="what">Tell PackWise where you're going and it builds your packing list from the weather, checks that your bag fits, and talks you through packing.</div>
     <div class="vet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></svg>Veteran owned and operated</div>
-    <small>Never guess what to pack again. Prototype v0.14</small>
+    <small>Never guess what to pack again. Prototype v0.15</small>
   </div>
   <style>
   .hero .what{font-size:14.5px;line-height:1.45;color:var(--on-band);margin-top:8px;max-width:60ch}
@@ -362,6 +362,10 @@ button{font:inherit;cursor:pointer}
           <button type="button" class="ghost" id="airBtn">Find airlines</button>
         </div>
         <p class="status" id="airStatus" role="status"></p>
+        <div class="airload" id="airLoad" hidden aria-hidden="true">
+          <div class="alrow"><svg class="alplane" viewBox="0 0 24 24"><path d="M21 15.5v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0v5l-8 5v2l8-2.5V18l-2.5 1.8V21l4-1.2 4 1.2v-1.2L13 18v-5z" fill="currentColor"/></svg><span class="almsg" id="airMsg">Finding your airport…</span></div>
+          <div class="alchips"><span></span><span></span><span></span><span></span></div>
+        </div>
         <div id="airList" hidden>
           <p class="airhead" id="airHead"></p>
           <div class="airchips" id="airChips" role="radiogroup" aria-label="Your airline"></div>
@@ -586,6 +590,18 @@ button{font:inherit;cursor:pointer}
     .flybox .apac .acl{right:auto;width:min(340px,calc(100vw - 64px))}
     .airrow .ghost{background:var(--sky);color:var(--on-sky);border-color:var(--sky);min-height:44px}
     .flybox .status{color:#3B4A47}
+    .flybox .status:empty{display:none}
+    .airload{display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:12px;background:rgba(255,255,255,.7)}
+    .airload[hidden]{display:none}
+    .alrow{display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:600;color:#1D2A28}
+    .alplane{width:22px;height:22px;flex:none;color:var(--sky);transform:rotate(90deg);animation:pwfly 1.4s ease-in-out infinite}
+    @keyframes pwfly{0%,100%{transform:rotate(90deg) translateY(0)}50%{transform:rotate(90deg) translateY(-6px)}}
+    .almsg{animation:pwfade .35s ease}
+    .alchips{display:flex;flex-wrap:wrap;gap:6px}
+    .alchips span{height:36px;border-radius:999px;background:#D3DEE8 linear-gradient(110deg,transparent 35%,rgba(255,255,255,.7) 50%,transparent 65%) 0 0/250% 100%;animation:pwshine 1.6s linear infinite}
+    .alchips span:nth-child(1){width:88px}.alchips span:nth-child(2){width:110px}.alchips span:nth-child(3){width:72px}.alchips span:nth-child(4){width:96px}
+    .airrow .ghost.busy{opacity:.85;cursor:progress}
+    @media (prefers-reduced-motion:reduce){.alplane,.alchips span{animation:none}}
     .flybox .status.err{color:#B3261E}
     .airhead{margin:0;font-size:13px;font-weight:600}
     .airchips{display:flex;flex-wrap:wrap;gap:6px}
@@ -1327,7 +1343,11 @@ $("#airport").addEventListener("keydown",e=>{ if(e.key==="Enter"&&$("#apList").h
 $("#airBtn").addEventListener("click",async()=>{
   const q=$("#airport").value.trim(), st=$("#airStatus"), btn=$("#airBtn"); st.className="status";
   if(!q){st.textContent="Type your airport or its code first, like ORD.";st.classList.add("err");return}
-  btn.disabled=true; st.textContent="Finding airlines and their bag rules…"; $("#airList").hidden=true;
+  btn.disabled=true; btn.classList.add("busy"); btn.textContent="Searching…";
+  st.textContent="Looking up airlines. This takes a few seconds."; $("#airList").hidden=true; $("#airLoad").hidden=false;
+  const AIR_MSGS=["Finding your airport…","Checking which airlines fly here…","Reading carry-on size rules…","Checking weight limits…","Almost there…"];
+  let mi=0; $("#airMsg").textContent=AIR_MSGS[0];
+  const msgTimer=setInterval(()=>{ if(mi<AIR_MSGS.length-1){ mi++; const m=$("#airMsg"); m.textContent=AIR_MSGS[mi]; m.style.animation="none"; void m.offsetWidth; m.style.animation=""; } },1800);
   try{
     const sample=await samplePromise; if(!sample) throw {code:"sampling_disabled"};
     const r=await sample.json(`A traveler says they are flying out of: """${q.slice(0,120)}"""
@@ -1358,7 +1378,7 @@ Reply with only JSON: {"found":true,"airport":"Full name (CODE)","code":"ORD","c
     st.textContent=""; drawAirlines();
   }catch(err){
     const code=err&&err.code; st.textContent=ERR[code]||"The lookup didn't go through. Try again."; st.classList.add("err");
-  }finally{btn.disabled=false}
+  }finally{clearInterval(msgTimer); $("#airLoad").hidden=true; btn.disabled=false; btn.classList.remove("busy"); btn.textContent="Find airlines"}
 });
 
 /* airport type-ahead: matches a built-in list of airports with passenger flights (OurAirports data) */
