@@ -275,7 +275,7 @@ button{font:inherit;cursor:pointer}
     <p>Imagine if your suitcase could talk to you.</p>
     <div class="what">Tell PackWise where you're going and it builds your packing list from the weather, checks that your bag fits, and talks you through packing.</div>
     <div class="vet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></svg>Veteran owned and operated</div>
-    <small>Never guess what to pack again. Prototype v0.13</small>
+    <small>Never guess what to pack again. Prototype v0.14</small>
   </div>
   <style>
   .hero .what{font-size:14.5px;line-height:1.45;color:var(--on-band);margin-top:8px;max-width:60ch}
@@ -366,6 +366,11 @@ button{font:inherit;cursor:pointer}
           <p class="airhead" id="airHead"></p>
           <div class="airchips" id="airChips" role="radiogroup" aria-label="Your airline"></div>
           <p class="hint" id="airNote"></p>
+          <span class="flabel" id="cabinH">Your seat</span>
+          <div class="cabins" role="radiogroup" aria-labelledby="cabinH">
+            <button type="button" role="radio" data-cabin="economy" aria-checked="true">Economy</button>
+            <button type="button" role="radio" data-cabin="business" aria-checked="false">Business or First</button>
+          </div>
         </div>
       </div>
       <div class="extra">
@@ -584,6 +589,12 @@ button{font:inherit;cursor:pointer}
     .flybox .status.err{color:#B3261E}
     .airhead{margin:0;font-size:13px;font-weight:600}
     .airchips{display:flex;flex-wrap:wrap;gap:6px}
+    #airList{display:flex;flex-direction:column;gap:8px}
+    #airList[hidden]{display:none}
+    .flybox .flabel{margin-top:4px}
+    .cabins{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:4px;border-radius:14px;background:#FFFFFF;border:2px solid #D3DEE8}
+    .cabins button{border:0;border-radius:10px;min-height:44px;padding:8px;background:transparent;color:#1D2A28;font-size:13.5px;font-weight:600}
+    .cabins button[aria-checked="true"]{background:var(--brand-deep);color:#FFFFFF}
     .airchips button{border:2px solid #D3DEE8;background:#FFFFFF;color:#1D2A28;font-size:13px;font-weight:600;padding:8px 14px;border-radius:999px;min-height:44px}
     .airchips button[aria-checked="true"]{background:var(--brand-deep);border-color:var(--brand-deep);color:#FFFFFF}
     /* airline check card in the plan */
@@ -1124,7 +1135,7 @@ function render(){
       <div style="min-width:0">
         <div class="phead"><span class="k">PACK</span>${s.example?'<span class="pill ex">Example trip</span>':'<h3>Your plan</h3>'}</div>
         <p class="dest">${esc(t.dest)}</p>
-        <div class="meta">${fmtDate(t.start)} → ${fmtDate(t.end)} · ${t.nights} night${t.nights===1?"":"s"} · ${esc(t.purpose)}${t.style&&STYLE_NAMES[t.style]?" · "+STYLE_NAMES[t.style]:""}${t.travel&&TRAVEL_NAMES[t.travel]?" · "+TRAVEL_NAMES[t.travel]:""}${t.airline?" · "+esc(t.airline.name):""}${nb>1?` · ${nb} bags`:""}</div>
+        <div class="meta">${fmtDate(t.start)} → ${fmtDate(t.end)} · ${t.nights} night${t.nights===1?"":"s"} · ${esc(t.purpose)}${t.style&&STYLE_NAMES[t.style]?" · "+STYLE_NAMES[t.style]:""}${t.travel&&TRAVEL_NAMES[t.travel]?" · "+TRAVEL_NAMES[t.travel]:""}${t.airline?" · "+esc(t.airline.name)+(t.cabin?" "+CABIN_NAMES[t.cabin]:""):""}${nb>1?` · ${nb} bags`:""}</div>
       </div>
       <div class="unit" role="group" aria-label="Temperature unit">
         <button type="button" class="ghost" data-unit="F" aria-pressed="${unit==="F"}">°F</button>
@@ -1283,8 +1294,15 @@ $("#result").addEventListener("click",async e=>{
 /* ---------- how you're traveling + airport and airline lookup ---------- */
 const TRAVEL_NAMES={plane:"By plane",train:"By train",car:"By car",other:"By bus, boat or other"};
 let travel=["plane","train","car","other"].includes(store.get("pw-travel"))?store.get("pw-travel"):"plane";
-let airInfo=store.get("pw-air")||null;   // last airport lookup: {airport,code,country,airlines:[...]}
+let airInfo=store.get("pw-air2")||null;   // last airport lookup: {airport,code,country,airlines:[...]}
 let airlineName=store.get("pw-airline")||"";
+let cabin=store.get("pw-cabin")==="business"?"business":"economy";
+const CABIN_NAMES={economy:"Economy",business:"Business or First"};
+function setCabin(c){
+  cabin=c; store.set("pw-cabin",c);
+  document.querySelectorAll("[data-cabin]").forEach(b=>b.setAttribute("aria-checked",b.dataset.cabin===c));
+}
+document.querySelectorAll("[data-cabin]").forEach(b=>b.addEventListener("click",()=>setCabin(b.dataset.cabin)));
 function setTravel(m){
   travel=m; store.set("pw-travel",m);
   document.querySelectorAll("[data-travel]").forEach(b=>b.setAttribute("aria-checked",b.dataset.travel===m));
@@ -1319,16 +1337,23 @@ For each airline give its standard economy (not basic economy) bag rules from th
 - carryOnKg: carry-on weight limit in kg, or null if the airline has no carry-on weight limit
 - personalIn: personal item max size in inches [height, width, depth], or null if the airline doesn't publish one
 - checkedKg: checked bag weight limit in kg for economy
+- checkedBags: number of free checked bags in standard economy on a typical flight from this airport (0 if bags cost extra)
+- bizCarryOnKg: carry-on weight limit in kg for business and first class, or null if there's no limit
+- bizCheckedKg: checked bag weight limit in kg for business and first class
+- bizCheckedBags: number of free checked bags in business and first class
 - fareNote: if the cheapest fare (like basic economy) drops the free carry-on, say so in a few words; else ""
 If you can't tell which airport this is, set found to false.
-Reply with only JSON: {"found":true,"airport":"Full name (CODE)","code":"ORD","country":"United States","airlines":[{"name":"","carryOnIn":[22,14,9],"carryOnKg":null,"personalIn":[17,10,9],"checkedKg":23,"fareNote":""}]}`,{modelTier:"default",cache:{gcTime:86400000}});
+Reply with only JSON: {"found":true,"airport":"Full name (CODE)","code":"ORD","country":"United States","airlines":[{"name":"","carryOnIn":[22,14,9],"carryOnKg":null,"personalIn":[17,10,9],"checkedKg":23,"checkedBags":0,"bizCarryOnKg":null,"bizCheckedKg":32,"bizCheckedBags":2,"fareNote":""}]}`,{modelTier:"default",cache:{gcTime:86400000}});
     if(!r||r.found===false||!Array.isArray(r.airlines)||!r.airlines.length){
       st.textContent="I couldn't find that airport. Try its 3-letter code, like ORD or LHR."; st.classList.add("err"); return;
     }
     airInfo={airport:String(r.airport||q).slice(0,80),code:String(r.code||"").slice(0,4),country:String(r.country||"").slice(0,40),
       airlines:r.airlines.filter(a=>a&&a.name).slice(0,10).map(a=>({name:String(a.name).slice(0,40),carryOnIn:goodDims(a.carryOnIn),
-        carryOnKg:Number(a.carryOnKg)>0?Number(a.carryOnKg):null,personalIn:goodDims(a.personalIn),checkedKg:Number(a.checkedKg)>0?Number(a.checkedKg):null,fareNote:String(a.fareNote||"").slice(0,120)}))};
-    store.set("pw-air",airInfo);
+        carryOnKg:Number(a.carryOnKg)>0?Number(a.carryOnKg):null,personalIn:goodDims(a.personalIn),checkedKg:Number(a.checkedKg)>0?Number(a.checkedKg):null,
+        checkedBags:Number.isFinite(Number(a.checkedBags))&&a.checkedBags!==null?Math.max(0,Math.round(Number(a.checkedBags))):null,
+        bizCarryOnKg:Number(a.bizCarryOnKg)>0?Number(a.bizCarryOnKg):null,bizCheckedKg:Number(a.bizCheckedKg)>0?Number(a.bizCheckedKg):null,
+        bizCheckedBags:Number(a.bizCheckedBags)>0?Math.round(Number(a.bizCheckedBags)):null,fareNote:String(a.fareNote||"").slice(0,120)}))};
+    store.set("pw-air2",airInfo);
     if(!chosenAirline()){airlineName="";store.set("pw-airline","")}
     st.textContent=""; drawAirlines();
   }catch(err){
@@ -1395,11 +1420,16 @@ const cmTxt=d=>d.map(x=>Math.round(x*2.54)).join(" × ")+" cm";
 function fitsIn(d,lim){const a=[...d].sort((x,y)=>y-x), b=[...lim].sort((x,y)=>y-x); return a.map((v,i)=>v-b[i])}
 function airlineCheck(t,ab,mine){
   if(t.travel!=="plane"||!t.airline) return "";
-  const a=t.airline, kg=estKg(ab,mine), kind=ab.bagL<=25?"personal":ab.bagL<=50?"carry":"checked";
+  const air=t.airline, biz=t.cabin==="business", kg=estKg(ab,mine), kind=ab.bagL<=25?"personal":ab.bagL<=50?"carry":"checked";
+  const a={...air,carryOnKg:biz&&"bizCarryOnKg" in air?air.bizCarryOnKg:air.carryOnKg,
+    checkedKg:biz?(air.bizCheckedKg||air.checkedKg):air.checkedKg,
+    freeBags:biz?air.bizCheckedBags:air.checkedBags};
+  const cabinName=biz?"business and first":"economy";
   const kindName={personal:"personal item",carry:"carry-on",checked:"checked bag"}[kind];
   const rows=[], issues=[];
   if(kind==="checked"){
     rows.push(["Your bag (estimated)",`${kg} kg (${toLb(kg)} lb)`,false]);
+    if(a.freeBags!=null) rows.push([`Free checked bags (${cabinName})`,a.freeBags===0?"None. Checked bags cost extra.":String(a.freeBags),false]);
     if(a.checkedKg){const over=kg>a.checkedKg; rows.push(["Checked bag limit",`${a.checkedKg} kg (${toLb(a.checkedKg)} lb)`,over]); if(over) issues.push(`about ${(kg-a.checkedKg).toFixed(1)} kg over the checked bag limit`)}
   } else {
     const lim=kind==="personal"?a.personalIn:a.carryOnIn;
@@ -1420,11 +1450,12 @@ function airlineCheck(t,ab,mine){
   }
   const warn=issues.length>0;
   const head=warn?`Heads up: your ${kindName} may not pass`:`Your ${kindName} fits ${a.name}'s rules`;
-  const sub=warn?`It looks ${issues.join(" and ")}.`:(t.airport?`Flying ${a.name} out of ${t.airport}`:`Flying ${a.name}`);
+  const sub=warn?`It looks ${issues.join(" and ")}.`:(t.airport?`Flying ${a.name} ${biz?"business or first":"economy"} out of ${t.airport}`:`Flying ${a.name} ${biz?"business or first":"economy"}`);
   return `<div class="aircheck ${warn?"warn":""}">
     <div class="achead"><span class="acicon" aria-hidden="true">${warn?"!":"✓"}</span><div><b>${esc(head)}</b><span>${esc(sub)}</span></div></div>
     <div class="acrows">${rows.map(([l,v,o])=>`<div class="acrow"><b>${esc(l)}</b><span class="${o?"over":""}">${esc(v)}</span></div>`).join("")}</div>
-    ${a.fareNote?`<p class="acnote"><strong>Cheapest fares:</strong> ${esc(a.fareNote)}</p>`:""}
+    ${a.fareNote&&!biz?`<p class="acnote"><strong>Cheapest fares:</strong> ${esc(a.fareNote)}</p>`:""}
+    ${biz?`<p class="acnote">Business and first usually come with a bigger bag allowance and priority bag service, so your bags come off the plane first.</p>`:""}
     ${warn&&kind!=="checked"?`<p class="acnote">Tip: wear your heaviest shoes and jacket on the plane, or move heavy items to a different bag.</p>`:""}
     <p class="acnote">Weight is an estimate from your packing list. Airlines change their rules, so double-check on ${esc(a.name)}'s website before you fly.</p>
   </div>`;
@@ -1437,7 +1468,7 @@ function airlineCheck(t,ab,mine){
   const draft=store.get("pw-form3"); if(draft){for(const k in draft){const f=$("#"+k); if(f){f.type==="checkbox"?f.checked=draft[k]:f.value=draft[k]}}}
   if(draft&&draft.bag){const r=document.querySelector(`input[name="bag"][value="${draft.bag}"]`); if(r) r.checked=true}
   drawMoreBags(draft&&Array.isArray(draft.extraBags)?draft.extraBags:null);
-  setTravel(travel); drawAirlines();
+  setTravel(travel); setCabin(cabin); drawAirlines();
 })();
 
 /* ---------- Claude ---------- */
@@ -1575,7 +1606,7 @@ $("#itinClear").onclick=()=>{itinFile=null;$("#itinPhoto").value="";$("#itinPrev
 
 /* build plan */
 function travelRule(t){
-  if(t.travel==="plane") return `TRAVEL: by plane${t.airline?` on ${t.airline.name}${t.airport?" from "+t.airport:""}`:""}. Keep carry-on liquids in 3.4 oz (100 ml) bottles in one clear quart bag, keep medications, chargers, ID and valuables in the carry-on, and wear the bulkiest shoes and jacket on the flight.`;
+  if(t.travel==="plane") return `TRAVEL: by plane${t.airline?` on ${t.airline.name}${t.airport?" from "+t.airport:""}`:""}${t.cabin==="business"?", flying business or first class (a bigger bag allowance, and an amenity kit with basics like an eye mask and socks is usually provided)":t.cabin?", flying economy":""}. Keep carry-on liquids in 3.4 oz (100 ml) bottles in one clear quart bag, keep medications, chargers, ID and valuables in the carry-on, and wear the bulkiest shoes and jacket on the flight.`;
   if(t.travel==="train") return "TRAVEL: by train. There are usually no strict bag rules, but the traveler carries and lifts their own bags onto racks, so favor a lighter load, plus snacks, a water bottle, headphones and a charger for the ride. Don't mention airline or liquids rules.";
   if(t.travel==="car") return "TRAVEL: by car (road trip). Space and weight matter less, so it's fine to add road-trip extras like a cooler, snacks and drinks, a phone mount, a car charger and a travel pillow. Don't mention airline or liquids rules.";
   if(t.travel==="other") return "TRAVEL: by bus, boat or another way. Give general travel advice that fits ground or sea travel, and don't mention airline rules.";
@@ -1639,7 +1670,7 @@ $("#tripForm").addEventListener("submit",async e=>{
   t.hasSchedule=!!(t.itinerary||itinFile);
   t.travel=travel;
   const al=travel==="plane"?chosenAirline():null;
-  if(al){t.airline=al; t.airport=airInfo.airport}
+  if(al){t.airline=al; t.airport=airInfo.airport; t.cabin=cabin}
   const r0=document.querySelector('input[name="bag"]:checked');
   store.set("pw-form3",{dest,start,end,purpose:$("#purpose").value,purposeOther:otherTxt,airport:$("#airport").value,style,itin:t.itinerary,laundry:t.laundry,customL:$("#customL").value,useCustom:$("#useCustom").checked,bag:r0&&r0.value,bagCount:$("#bagCount").value,extraBags:[...$("#moreBags").querySelectorAll("select")].map(s=>s.value)});
 
