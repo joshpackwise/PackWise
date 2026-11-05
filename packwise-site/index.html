@@ -195,6 +195,52 @@ button{font:inherit;cursor:pointer}
 .wx p{margin:0;min-width:0}
 .wx .watch{font-size:13.5px;font-weight:600;color:#FFE2B0}
 .wxnote{font-size:12px;color:var(--sky-soft);grid-column:1/-1;margin-top:4px}
+/* live forecast */
+.wx.live{grid-template-columns:minmax(0,1fr)}
+.fc{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.fc li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.14);font-size:13.5px}
+.fc li b{font-size:13px;white-space:nowrap;min-width:84px}
+.fc .ft{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+.fc .rain{display:block;font-size:12px;color:#FFE2B0;font-weight:600}
+/* re-check banner */
+.recheck{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:14px 16px;border-radius:16px;background:var(--bubble);border:2px solid var(--accent)}
+.recheck>div{flex:1 1 220px;min-width:0}
+.recheck b{display:block;font-size:15px}
+.recheck span{display:block;font-size:13px;color:var(--muted)}
+.recheck .go{flex:0 1 auto;min-height:44px;padding:10px 16px;font-size:14px}
+.recheck .status{flex-basis:100%;margin:0}
+/* reminders */
+.remind{display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:16px;background:var(--soft);border:2px solid var(--line)}
+.remind h3{margin:0}
+.remind .hint{margin:0}
+.rmtimes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:420px){.rmtimes{grid-template-columns:minmax(0,1fr)}}
+.rmtimes label{display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600}
+.rmtimes input{min-height:44px}
+.rmopts{display:flex;flex-direction:column;gap:8px}
+.rmopts label{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;align-items:start;font-size:13.5px;line-height:1.4;font-weight:400}
+.rmopts input{width:20px;height:20px;margin:1px 0 0}
+.rmopts label.off{color:var(--muted)}
+.rmnote{font-size:12px;color:var(--muted);margin:0}
+/* my trips */
+.trips{display:flex;flex-direction:column;gap:10px}
+.trips[hidden]{display:none}
+.upnext{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:14px 16px;border-radius:16px;background:var(--mint);border:2px solid var(--brand-deep)}
+.upnext>div{flex:1 1 220px;min-width:0}
+.upnext b{display:block;font-size:15.5px}
+.upnext span{display:block;font-size:13px;color:var(--muted)}
+.upnext .go{flex:0 1 auto;min-height:44px;padding:10px 16px;font-size:14px}
+.tripsbox summary{cursor:pointer;font-weight:700;font-size:15px;min-height:44px;display:flex;align-items:center;gap:8px}
+.tripsbox .tcount{font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--mint);color:var(--brand-deep)}
+.triplist{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.triplist li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;align-items:center;padding:10px 12px;border-radius:12px;background:var(--soft)}
+.triplist li.cur{box-shadow:0 0 0 2px var(--brand-deep) inset}
+.triplist .tn{font-weight:600;overflow-wrap:anywhere}
+.triplist .td{display:block;font-size:12.5px;color:var(--muted)}
+.triplist .tb{display:flex;gap:6px}
+.triplist .tb button{min-height:40px;padding:6px 12px;font-size:13px}
+.triplist .when{display:block;font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--brand-deep)}
+.triplist .when.past{color:var(--muted)}
 
 .days{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
 .day{display:grid;grid-template-columns:64px minmax(0,1fr);gap:4px 14px;padding:10px;border-radius:14px;background:var(--soft)}
@@ -275,7 +321,7 @@ button{font:inherit;cursor:pointer}
     <p>Imagine if your suitcase could talk to you.</p>
     <div class="what">Tell PackWise where you're going and it builds your packing list from the weather, checks that your bag fits, and talks you through packing.</div>
     <div class="vet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></svg>Veteran owned and operated</div>
-    <small>Never guess what to pack again. Prototype v0.15</small>
+    <small>Never guess what to pack again. Prototype v0.16</small>
   </div>
   <style>
   .hero .what{font-size:14.5px;line-height:1.45;color:var(--on-band);margin-top:8px;max-width:60ch}
@@ -634,6 +680,14 @@ button{font:inherit;cursor:pointer}
   </form>
 
   <div class="col">
+    <section class="panel trips" id="tripsPanel" aria-label="My trips" hidden>
+      <div id="upNext"></div>
+      <details class="tripsbox" id="tripsBox">
+        <summary>My trips <span class="tcount" id="tripsCount"></span></summary>
+        <ul class="triplist" id="tripList"></ul>
+        <p class="hint">Your trips are saved only on this device.</p>
+      </details>
+    </section>
     <section class="panel" id="result" aria-live="polite" aria-label="Your packing plan"></section>
     <section class="panel look" id="lookPanel" aria-labelledby="lookH">
       <div class="phead"><span class="k">LOOK</span><h2 id="lookH">What to wear each day</h2></div>
@@ -870,7 +924,54 @@ let unit = store.get("pw-unit") || "F";
 let scanned = null;
 let justChanged = new Set();
 
-function save(){ if(!state.example) store.set("pw-state3",state) }
+function save(){ if(state.example) return; if(!state.tripId) state.tripId="t"+Date.now().toString(36); store.set("pw-state3",state); saveTrip() }
+/* ---------- my trips (saved on this device) ---------- */
+function getTrips(){const x=store.get("pw-trips");return Array.isArray(x)?x:[]}
+function saveTrip(){
+  if(state.example||!state.tripId) return;
+  const slim=JSON.parse(JSON.stringify(state,(k,v)=>typeof v==="string"&&v.length>20000?undefined:v));  // leave out big photos
+  const list=getTrips().filter(x=>x.id!==state.tripId);
+  list.unshift({id:state.tripId,dest:state.trip.dest,start:state.trip.start,end:state.trip.end,state:slim});
+  store.set("pw-trips",list.slice(0,20));
+  renderTrips();
+}
+function daysUntil(d){const a=new Date(d+"T12:00:00"), n=new Date(); n.setHours(12,0,0,0); return Math.round((a-n)/864e5)}
+function todayISO(){const n=new Date();return n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0")+"-"+String(n.getDate()).padStart(2,"0")}
+function whenTxt(start,end){
+  const d=daysUntil(start);
+  if(daysUntil(end)<0) return {txt:"Past trip",past:true};
+  if(d<=0) return {txt:"Happening now",past:false};
+  return {txt:d===1?"Tomorrow":`In ${d} days`,past:false};
+}
+function renderTrips(){
+  const panel=document.getElementById("tripsPanel"); if(!panel) return;
+  const trips=getTrips();
+  if(!trips.length){panel.hidden=true;return}
+  panel.hidden=false;
+  const order=[...trips].sort((a,b)=>{const pa=daysUntil(a.end)<0, pb=daysUntil(b.end)<0; if(pa!==pb) return pa?1:-1; return pa?b.start.localeCompare(a.start):a.start.localeCompare(b.start)});
+  $("#tripsCount").textContent=trips.length;
+  $("#tripList").innerHTML=order.map(x=>{const w=whenTxt(x.start,x.end), cur=x.id===state.tripId&&!state.example;
+    return `<li class="${cur?"cur":""}"><div><span class="when ${w.past?"past":""}">${esc(w.txt.toUpperCase())}${cur?" · OPEN NOW":""}</span><span class="tn">${esc(x.dest)}</span><span class="td">${fmtDate(x.start)} → ${fmtDate(x.end)}</span></div>
+      <div class="tb">${cur?"":`<button type="button" class="ghost" data-open-trip="${esc(x.id)}">Open</button>`}<button type="button" class="ghost" data-del-trip="${esc(x.id)}" aria-label="Remove trip to ${esc(x.dest)}">Remove</button></div></li>`}).join("");
+  // nudge for the next trip that's coming up soon
+  const soon=order.find(x=>{const d=daysUntil(x.start);return d>=0&&d<=16&&daysUntil(x.end)>=0});
+  let up="";
+  if(soon){
+    const d=daysUntil(soon.start), cur=soon.id===state.tripId&&!state.example;
+    const when=d===0?"is today":d===1?"is tomorrow":`is in ${d} days`;
+    const fs=cur?state.forecast:(soon.state&&soon.state.forecast), fresh=!!(fs&&fs.fetched===todayISO());
+    up=`<div class="upnext"><div><b>Your trip to ${esc(soon.dest.split(",")[0])} ${when}</b><span>${fresh?"Your list is up to date with today's forecast.":"The real forecast is out now, so it's a good time to re-check your packing list."}</span></div>
+      ${cur?(fresh?"":`<button type="button" class="go" data-recheck>Re-check my list</button>`):`<button type="button" class="go" data-open-trip="${esc(soon.id)}">Open this trip</button>`}</div>`;
+  }
+  $("#upNext").innerHTML=up;
+}
+function openTrip(id){
+  const x=getTrips().find(z=>z.id===id); if(!x) return;
+  state=x.state; if(!state.chat) state.chat=[]; if(!state.days) state.days=[];
+  activeBag=1; justChanged=new Set();
+  store.set("pw-state3",state); render(); renderChat(); renderTrips();
+  $("#result").scrollIntoView({behavior:"smooth",block:"start"});
+}
 function key(t){return "pw-chk3-"+[t.dest,t.start,t.end].join("|")}
 function norm(s){return String(s||"").trim().toLowerCase()}
 function nightsBetween(a,b){return Math.round((new Date(b)-new Date(a))/86400000)}
@@ -1133,6 +1234,9 @@ function render(){
       <p class="wxnote">Based on what these dates have typically been like over past years, not a forecast. It can't say which day it will rain, so check a live forecast a few days before you leave.</p>
     </div>` : `<div class="wx"><p class="wxnote" style="margin:0">No weather history for this plan.</p></div>`;
 
+  const fcHtml = forecastCard(s, deg);
+  const recheckHtml = recheckBanner(s);
+  const remindHtml = remindCard(s);
   const noSched = t.mode==="business" && t.hasSchedule===false;
   const daysHtml = s.days&&s.days.length ? `<div class="cat">${noSched?`<h2>Day-by-day suggestions</h2><p class="hint daynote">You didn't add a schedule, so these are general outfit and style ideas. Add your agenda under "Anything else we should know?" and PackWise will plan around your real meetings.</p>`:"<h2>Day by day</h2>"}<ol class="days">${s.days.map(d=>{const f=fmtDay(d.date);return `
       <li class="day"><div class="when"><b>${esc(f.dow)}</b>${esc(f.md)}</div>
@@ -1160,7 +1264,9 @@ function render(){
     </div>
     ${tabsHtml}
     ${suitcaseSays(s,mine,total,usable,ab,nb)}
+    ${recheckHtml}
     ${airlineCheck(t,ab,mine)}
+    ${fcHtml}
     ${wxHtml}
     ${daysHtml}
     ${tabsHtml}
@@ -1181,6 +1287,7 @@ function render(){
     </div>
     ${s.tips&&s.tips.length?`<div class="cat"><h3>Packing tips</h3><ul class="tips">${s.tips.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}
     ${s.example?"":`<button type="button" class="go sharebtn" id="shareBtn">Share my list</button>`}
+    ${remindHtml}
     ${s.example?"":`<div class="fbcard">
       <div><b>How did PackWise do?</b><span>7 quick questions, about 2 minutes. Your honest feedback shapes what we build next.</span></div>
       <a class="go fbgo" href="${FEEDBACK_URL}" target="_blank" rel="noopener">Give feedback</a>
@@ -1481,6 +1588,143 @@ function airlineCheck(t,ab,mine){
   </div>`;
 }
 
+/* ---------- live forecast (Open-Meteo, free, up to 16 days ahead) ---------- */
+const WX_CODES=[[0,"Clear"],[1,"Mostly clear"],[2,"Partly cloudy"],[3,"Cloudy"],[45,"Fog"],[48,"Fog"],[51,"Light drizzle"],[53,"Drizzle"],[55,"Drizzle"],[56,"Freezing drizzle"],[57,"Freezing drizzle"],[61,"Light rain"],[63,"Rain"],[65,"Heavy rain"],[66,"Freezing rain"],[67,"Freezing rain"],[71,"Light snow"],[73,"Snow"],[75,"Heavy snow"],[77,"Snow"],[80,"Showers"],[81,"Showers"],[82,"Heavy showers"],[85,"Snow showers"],[86,"Snow showers"],[95,"Thunderstorms"],[96,"Thunderstorms"],[99,"Thunderstorms"]];
+function wxWord(c){const x=WX_CODES.find(z=>z[0]===c);return x?x[1]:"Mixed"}
+async function geocodeDest(dest){
+  const name=dest.split(",")[0].trim(), low=dest.toLowerCase();
+  const r=await fetch("https://geocoding-api.open-meteo.com/v1/search?count=10&language=en&format=json&name="+encodeURIComponent(name));
+  const res=((await r.json()).results||[]).sort((a,b)=>(b.population||0)-(a.population||0));
+  const hit=res.find(x=>low.includes((x.country||"~").toLowerCase())&&(!x.admin1||low.includes(x.admin1.toLowerCase())))||res.find(x=>low.includes((x.country||"~").toLowerCase()))||res[0];
+  if(!hit) throw {code:"no_place"};
+  return {lat:hit.latitude,lon:hit.longitude};
+}
+async function getForecast(t){
+  const g=await geocodeDest(t.dest);
+  const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${g.lat}&longitude=${g.lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=16`);
+  const d=(await r.json()).daily; if(!d||!d.time) throw {code:"no_forecast"};
+  const days=d.time.map((date,i)=>({date,code:d.weather_code[i],hiC:d.temperature_2m_max[i],loC:d.temperature_2m_min[i],
+    hiF:d.temperature_2m_max[i]*9/5+32,loF:d.temperature_2m_min[i]*9/5+32,rain:d.precipitation_probability_max[i]}))
+    .filter(x=>x.date>=t.start&&x.date<=t.end&&x.hiC!=null);
+  return {fetched:todayISO(),days};
+}
+function fcLine(fc){return fc.days.map(x=>`${fmtDay(x.date).dow} ${x.date.slice(5)}: ${wxWord(x.code)}, high ${Math.round(x.hiF)}F/low ${Math.round(x.loF)}F${x.rain!=null?`, ${x.rain}% chance of rain`:""}`).join("; ")}
+function forecastCard(s,deg){
+  const fc=s.forecast; if(!fc||!fc.days||!fc.days.length||s.example) return "";
+  const last=fc.days[fc.days.length-1].date, missing=last<s.trip.end;
+  return `<div class="wx live"><h3>Live forecast</h3>
+    <ul class="fc">${fc.days.map(x=>{const f=fmtDay(x.date);return `<li><b>${esc(f.dow)} ${esc(f.md)}</b><span>${esc(wxWord(x.code))}${x.rain!=null&&x.rain>=30?`<span class="rain">${x.rain}% chance of rain</span>`:""}</span><span class="ft">${deg(x.hiF,x.hiC)} / ${deg(x.loF,x.loC)}</span></li>`}).join("")}</ul>
+    <p class="wxnote">Updated ${esc(fmtDate(fc.fetched))}.${missing?" Later days of your trip aren't in the forecast yet.":""} Forecasts change, so re-check the day before you leave.</p></div>`;
+}
+function recheckBanner(s){
+  if(s.example) return "";
+  const t=s.trip, d=daysUntil(t.start);
+  if(daysUntil(t.end)<0||d>16) return "";
+  if(s.forecast&&s.forecast.fetched===todayISO()) return "";
+  const when=d<=0?"is underway":d===1?"is tomorrow":`is in ${d} days`;
+  return `<div class="recheck"><div><b>Your trip ${when}. The real forecast is out.</b><span>Let's re-check your list against the actual weather, not past years.</span></div>
+    <button type="button" class="go" data-recheck>Update with the live forecast</button><p class="status" id="recheckStatus" role="status"></p></div>`;
+}
+let recheckBusy=false;
+async function recheck(){
+  if(recheckBusy||state.example) return; recheckBusy=true;
+  const btns=[...document.querySelectorAll("[data-recheck]")]; btns.forEach(b=>{b.disabled=true;b.textContent="Checking the forecast…"});
+  const st=document.getElementById("recheckStatus");
+  try{
+    const fc=await getForecast(state.trip);
+    if(!fc.days.length){ if(st) st.textContent="The forecast doesn't reach your trip dates yet. Try again a few days before you leave."; return }
+    state.forecast=fc; save(); render(); renderTrips();
+    $("#q").value=`The live forecast for my trip is out: ${fcLine(fc)}. Re-check my packing list for this weather and add, remove or change anything I need.`;
+    $("#talkPanel").scrollIntoView({behavior:"smooth",block:"start"});
+    $("#talkForm").requestSubmit();
+  }catch(err){
+    if(st) st.textContent="Couldn't get the forecast right now. Check your connection and try again.";
+  }finally{
+    recheckBusy=false;
+    document.querySelectorAll("[data-recheck]").forEach(b=>{b.disabled=false;b.textContent=b.closest(".upnext")?"Re-check my list":"Update with the live forecast"});
+  }
+}
+
+/* ---------- reminders: calendar alerts ---------- */
+function remindCard(s){
+  if(s.example||daysUntil(s.trip.end)<0) return "";
+  const r=s.remind||{}, t=s.trip, d=daysUntil(t.start);
+  const canRecheck=d>3, startDay=fmtDay(t.start);
+  return `<div class="remind" id="remindCard">
+    <h3>Want PackWise to remind you?</h3>
+    <p class="hint">Optional. We'll add alerts to your phone's calendar so nothing gets left behind.</p>
+    <div class="rmtimes">
+      <label for="rmWake">Wake-up time on ${esc(startDay.dow)} ${esc(startDay.md)}<input type="time" id="rmWake" value="${esc(r.wake||"06:00")}"></label>
+      <label for="rmLeave">Leaving the house at <span class="hint" style="font-weight:400">Optional</span><input type="time" id="rmLeave" value="${esc(r.leave||"")}"></label>
+    </div>
+    <div class="rmopts">
+      <label class="${canRecheck?"":"off"}"><input type="checkbox" id="rmRecheck" ${canRecheck&&r.recheck!==false?"checked":""} ${canRecheck?"":"disabled"}><span>Remind me 3 days before to re-check my list with the real forecast${canRecheck?"":" (your trip is too close for this one)"}</span></label>
+      <label><input type="checkbox" id="rmMorning" ${r.morning!==false?"checked":""}><span>Checklist 15 minutes after I wake up: charger, meds, ID and the rest</span></label>
+      <label><input type="checkbox" id="rmLeaveAlert" ${r.leaveAlert!==false?"checked":""}><span>Last check 30 minutes before I leave (needs a leaving time)</span></label>
+    </div>
+    <button type="button" class="go" id="remindBtn">Add reminders to my calendar</button>
+    <p class="status" id="remindStatus" role="status"></p>
+    <p class="rmnote">These play your phone's normal calendar alert. They don't ring like an alarm and stay quiet on silent or Do Not Disturb, so still set your alarm.</p>
+  </div>`;
+}
+function readRemind(){
+  const g=id=>document.getElementById(id);
+  state.remind={wake:g("rmWake").value,leave:g("rmLeave").value,recheck:g("rmRecheck").checked,morning:g("rmMorning").checked,leaveAlert:g("rmLeaveAlert").checked};
+  return state.remind;
+}
+function grabList(s){
+  const t=s.trip, core=["Phone and charger","Wallet and ID","Medications","Keys"];
+  if(t.travel==="plane") core.splice(2,0,"Boarding pass","Passport if you're flying abroad");
+  const extra=s.items.filter(i=>i.essential!==false&&["Documents","Tech","Often forgotten"].includes(i.category)).map(i=>i.name);
+  const out=[]; [...core,...extra].forEach(n=>{const k=n.toLowerCase(); if(!out.some(o=>o.toLowerCase()===k||(k.length>4&&o.toLowerCase().includes(k)))) out.push(n)});
+  return out.slice(0,12);
+}
+function icsEsc(x){return String(x).replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\r?\n/g,"\\n")}
+function icsFold(line){const out=[];while(line.length>73){out.push(line.slice(0,73));line=" "+line.slice(73)}out.push(line);return out.join("\r\n")}
+function icsLocal(dateISO,mins){const d=new Date(dateISO+"T00:00:00"); d.setMinutes(d.getMinutes()+mins);
+  const p=n=>String(n).padStart(2,"0"); return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}T${p(d.getHours())}${p(d.getMinutes())}00`}
+function toMins(hhmm){const m=/^(\d{1,2}):(\d{2})/.exec(hhmm||"");return m?Number(m[1])*60+Number(m[2]):null}
+function buildIcs(s,r){
+  const t=s.trip, place=t.dest.split(",")[0], url=location.origin, events=[];
+  const list=grabList(s).map(x=>"- "+x).join("\n");
+  const now=new Date(), stamp=now.toISOString().replace(/[-:]/g,"").replace(/\.\d+Z$/,"Z");
+  if(r.recheck&&daysUntil(t.start)>3){
+    const day=new Date(t.start+"T12:00:00"); day.setDate(day.getDate()-3);
+    const iso=day.getFullYear()+"-"+String(day.getMonth()+1).padStart(2,"0")+"-"+String(day.getDate()).padStart(2,"0");
+    events.push({start:icsLocal(iso,18*60),title:`PackWise: re-check your list for ${place}`,body:`Your trip to ${place} is in 3 days and the real forecast is out now. Open PackWise and tap "Update with the live forecast" to adjust your list.\n${url}`});
+  }
+  const wake=toMins(r.wake);
+  if(r.morning&&wake!=null) events.push({start:icsLocal(t.start,wake+15),title:"PackWise: don't forget these!",body:`Before you head out to ${place}:\n${list}\n\nYour full list: ${url}`});
+  const leave=toMins(r.leave);
+  if(r.leaveAlert&&leave!=null) events.push({start:icsLocal(t.start,leave-30),title:`PackWise: leaving for ${place} in 30 minutes`,body:`Last check before you go:\n${list}`});
+  const lines=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//PackWise//Trip reminders//EN","CALSCALE:GREGORIAN","METHOD:PUBLISH"];
+  events.forEach((e,i)=>{lines.push("BEGIN:VEVENT",`UID:${s.tripId||"pw"}-${i}-${now.getTime()}@packwise`,`DTSTAMP:${stamp}`,`DTSTART:${e.start}`,"DURATION:PT15M",
+    icsFold("SUMMARY:"+icsEsc(e.title)),icsFold("DESCRIPTION:"+icsEsc(e.body)),"BEGIN:VALARM","ACTION:DISPLAY","TRIGGER:PT0M",icsFold("DESCRIPTION:"+icsEsc(e.title)),"END:VALARM","END:VEVENT")});
+  lines.push("END:VCALENDAR");
+  return {text:lines.join("\r\n"),count:events.length};
+}
+function saveIcs(text,name){
+  const blob=new Blob([text],{type:"text/calendar;charset=utf-8"}), u=URL.createObjectURL(blob), a=document.createElement("a");
+  a.href=u; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),60000);
+}
+$("#result").addEventListener("change",e=>{ if(e.target.closest("#remindCard")){ readRemind(); save() } });
+$("#result").addEventListener("click",e=>{
+  if(e.target.closest("[data-recheck]")){ recheck(); return }
+  if(!e.target.closest("#remindBtn")) return;
+  const r=readRemind(), st=$("#remindStatus"); st.className="status"; save();
+  if(r.leaveAlert&&!r.leave&&!r.morning&&!r.recheck){st.textContent="Add a leaving time, or pick another reminder.";st.classList.add("err");return}
+  const ics=buildIcs(state,r);
+  if(!ics.count){st.textContent="Pick at least one reminder first.";st.classList.add("err");return}
+  saveIcs(ics.text,`PackWise-${state.trip.dest.split(",")[0].replace(/[^A-Za-z0-9]+/g,"-")}-reminders.ics`);
+  st.textContent=`Done. Open the file to add ${ics.count} reminder${ics.count===1?"":"s"} to your calendar.`;
+});
+$("#tripsPanel").addEventListener("click",e=>{
+  const o=e.target.closest("[data-open-trip]"); if(o){openTrip(o.dataset.openTrip);return}
+  if(e.target.closest("[data-recheck]")){recheck();return}
+  const d=e.target.closest("[data-del-trip]"); if(!d) return;
+  store.set("pw-trips",getTrips().filter(x=>x.id!==d.dataset.delTrip)); renderTrips();
+});
+
 /* ---------- form defaults ---------- */
 (function(){
   const d=new Date(); const iso=x=>new Date(d.getTime()+x*86400000).toISOString().slice(0,10);
@@ -1717,7 +1961,7 @@ $("#tripForm").addEventListener("submit",async e=>{
     st.textContent=(ERR[code]||"The AI helper wasn't reachable.")+" You're seeing a basic list without weather.";
   }
   justChanged=new Set(); activeBag=1;
-  state={trip:t,...result,chat:[]}; save(); render(); renderChat();
+  state={trip:t,...result,chat:[],tripId:"t"+Date.now().toString(36)}; save(); render(); renderChat();
   stopLoading();
   if(window.matchMedia("(max-width:840px)").matches) $("#result").scrollIntoView({behavior:"smooth",block:"start"});
 });
@@ -1761,6 +2005,7 @@ Trip: ${t.dest}, ${t.start} to ${t.end} (${t.nights} nights), ${t.purpose}.
 ${travelRule(t)}
 ${bagLine}
 ${s.weather?`Past-years weather for these dates: ${s.weather.summary} Avg high ${Math.round(s.weather.highF)}F, low ${Math.round(s.weather.lowF)}F. ${s.weather.wetDays||""}`:"No weather info."}
+${s.forecast&&s.forecast.days&&s.forecast.days.length?`LIVE FORECAST (real, fetched ${s.forecast.fetched}): ${fcLine(s.forecast)}.`:""}
 ${days?"Day-by-day plan:\n"+days:""}
 ${t.itinerary?"Original itinerary: "+t.itinerary.slice(0,2000):""}
 Current packing list:
@@ -1768,7 +2013,7 @@ ${list}
 ${history?"Conversation so far:\n"+history:""}
 New message from the traveler: """${q}"""
 
-If the message adds details (activities, events, places, people, dress codes, things a friend said, preferences) or asks for changes, update the list: add items, remove items, or change counts. Use exact existing names for remove/update. Keep the bag size in mind and say if it no longer fits.${nb>1?` Every added item needs "bag" (1 to ${nb}). To move an item to another bag, send it in "update" with the new "bag" number.`:""} Only send "days" (the full updated array) if the day-by-day plan should change. Weather talk must be about past-years patterns, never a forecast.
+If the message adds details (activities, events, places, people, dress codes, things a friend said, preferences) or asks for changes, update the list: add items, remove items, or change counts. Use exact existing names for remove/update. Keep the bag size in mind and say if it no longer fits.${nb>1?` Every added item needs "bag" (1 to ${nb}). To move an item to another bag, send it in "update" with the new "bag" number.`:""} Only send "days" (the full updated array) if the day-by-day plan should change. ${s.forecast&&s.forecast.days&&s.forecast.days.length?"Use the live forecast above when you talk about weather.":"Weather talk must be about past-years patterns, never a forecast."}
 "reply" is what you say to them, under 90 words, plain text.
 
 Reply with only JSON:
@@ -1957,6 +2202,8 @@ if(state.example && (state.trip.mode==="business")!==(tripMode==="business")) st
 showChosen();
 render();
 renderChat();
+if(!state.example&&!state.tripId) save();   // trips made before this update join My trips
+renderTrips();
 })();
 </script>
 
