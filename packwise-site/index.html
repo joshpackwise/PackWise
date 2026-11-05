@@ -321,7 +321,7 @@ button{font:inherit;cursor:pointer}
     <p>Imagine if your suitcase could talk to you.</p>
     <div class="what">Tell PackWise where you're going and it builds your packing list from the weather, checks that your bag fits, and talks you through packing.</div>
     <div class="vet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></svg>Veteran owned and operated</div>
-    <small>Never guess what to pack again. Prototype v0.16</small>
+    <small>Never guess what to pack again. Prototype v0.18</small>
   </div>
   <style>
   .hero .what{font-size:14.5px;line-height:1.45;color:var(--on-band);margin-top:8px;max-width:60ch}
@@ -421,6 +421,28 @@ button{font:inherit;cursor:pointer}
             <button type="button" role="radio" data-cabin="economy" aria-checked="true">Economy</button>
             <button type="button" role="radio" data-cabin="business" aria-checked="false">Business or First</button>
           </div>
+        </div>
+      </div>
+      <div class="flybox carbox" id="carBox" hidden>
+        <label for="origin">Starting from <span class="hint">Optional. We'll flag rules of the road in each state you drive through.</span></label>
+        <input id="origin" placeholder="City and state, e.g. Syracuse, NY" autocomplete="off">
+        <label for="carModel">Your car <span class="hint">Optional. We'll check your bags fit in the trunk.</span></label>
+        <div class="airrow">
+          <input id="carModel" placeholder="Make and model, e.g. Honda CR-V" autocomplete="off">
+          <button type="button" class="ghost" id="carBtn">Look up</button>
+        </div>
+        <p class="status" id="carStatus" role="status"></p>
+        <p class="carinfo" id="carInfo" hidden></p>
+        <span class="flabel" id="loadH">Anything already in your car?</span>
+        <div class="loads" role="radiogroup" aria-labelledby="loadH">
+          <button type="button" role="radio" data-load="empty" aria-checked="true">It's empty</button>
+          <button type="button" role="radio" data-load="limited" aria-checked="false">Limited space</button>
+          <button type="button" role="radio" data-load="list" aria-checked="false">Let me list it</button>
+        </div>
+        <div id="carListBox" hidden>
+          <div class="airchips" id="carChips" aria-label="Already in your car"></div>
+          <label for="carOther" class="otherlbl">Other <span class="hint">Anything else taking up space</span></label>
+          <input id="carOther" placeholder="e.g. tool box, sports bag" autocomplete="off">
         </div>
       </div>
       <div class="extra">
@@ -651,6 +673,32 @@ button{font:inherit;cursor:pointer}
     .flybox .status.err{color:#B3261E}
     .airhead{margin:0;font-size:13px;font-weight:600}
     .airchips{display:flex;flex-wrap:wrap;gap:6px}
+    .carbox[hidden]{display:none}
+    .carbox .carinfo{margin:0;padding:10px 12px;border-radius:12px;background:#FFFFFF;font-size:13.5px;color:#1D2A28}
+    .carbox .otherlbl{margin-top:4px}
+    .loads{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;border-radius:14px;background:#FFFFFF;border:2px solid #D3DEE8}
+    .loads button{border:0;border-radius:10px;min-height:44px;padding:8px 4px;background:transparent;color:#1D2A28;font-size:13px;font-weight:600;line-height:1.2}
+    .loads button[aria-checked="true"]{background:var(--brand-deep);color:#FFFFFF}
+    #carListBox{display:flex;flex-direction:column;gap:8px}
+    #carListBox[hidden]{display:none}
+    #carChips button{border:2px solid #D3DEE8;background:#FFFFFF;color:#1D2A28;font-size:13px;font-weight:600;padding:8px 14px;border-radius:999px;min-height:44px}
+    #carChips button[aria-pressed="true"]{background:var(--brand-deep);border-color:var(--brand-deep);color:#FFFFFF}
+    /* car trip cards in the plan */
+    .carcheck .acicon{font-size:15px}
+    .road{display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:16px;background:var(--soft);border:2px solid var(--line)}
+    .road h3,.rules h3{margin:0}
+    .road ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:5px;font-size:14px;line-height:1.4}
+    .road .kids{padding:10px 12px;border-radius:12px;background:var(--mint)}
+    .road .kids b{display:block;font-size:13.5px;margin-bottom:4px}
+    .road .shop{align-self:flex-start;min-height:44px;padding:10px 16px;font-size:14px}
+    .rules{display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:16px;background:var(--surface);border:2px solid var(--sky)}
+    .rules .hint{margin:0}
+    .rules .stt{padding:10px 12px;border-radius:12px;background:var(--soft)}
+    .rules .stt b{display:block;font-size:14.5px;margin-bottom:4px}
+    .rules .stt ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:13.5px;line-height:1.4}
+    .rules .go{align-self:flex-start;min-height:44px;padding:10px 16px;font-size:14px}
+    .rules .ldg{display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:600}
+    .rules .ldg svg{width:22px;height:22px;color:var(--sky);animation:pwfly 1.4s ease-in-out infinite}
     #airList{display:flex;flex-direction:column;gap:8px}
     #airList[hidden]{display:none}
     .flybox .flabel{margin-top:4px}
@@ -1237,6 +1285,9 @@ function render(){
   const fcHtml = forecastCard(s, deg);
   const recheckHtml = recheckBanner(s);
   const remindHtml = remindCard(s);
+  const carHtml = carCheck(s);
+  const roadHtml = roadCard(s);
+  const rulesHtml = rulesCard(s);
   const noSched = t.mode==="business" && t.hasSchedule===false;
   const daysHtml = s.days&&s.days.length ? `<div class="cat">${noSched?`<h2>Day-by-day suggestions</h2><p class="hint daynote">You didn't add a schedule, so these are general outfit and style ideas. Add your agenda under "Anything else we should know?" and PackWise will plan around your real meetings.</p>`:"<h2>Day by day</h2>"}<ol class="days">${s.days.map(d=>{const f=fmtDay(d.date);return `
       <li class="day"><div class="when"><b>${esc(f.dow)}</b>${esc(f.md)}</div>
@@ -1255,7 +1306,7 @@ function render(){
       <div style="min-width:0">
         <div class="phead"><span class="k">PACK</span>${s.example?'<span class="pill ex">Example trip</span>':'<h3>Your plan</h3>'}</div>
         <p class="dest">${esc(t.dest)}</p>
-        <div class="meta">${fmtDate(t.start)} → ${fmtDate(t.end)} · ${t.nights} night${t.nights===1?"":"s"} · ${esc(t.purpose)}${t.style&&STYLE_NAMES[t.style]?" · "+STYLE_NAMES[t.style]:""}${t.travel&&TRAVEL_NAMES[t.travel]?" · "+TRAVEL_NAMES[t.travel]:""}${t.airline?" · "+esc(t.airline.name)+(t.cabin?" "+CABIN_NAMES[t.cabin]:""):""}${nb>1?` · ${nb} bags`:""}</div>
+        <div class="meta">${fmtDate(t.start)} → ${fmtDate(t.end)} · ${t.nights} night${t.nights===1?"":"s"} · ${esc(t.purpose)}${t.style&&STYLE_NAMES[t.style]?" · "+STYLE_NAMES[t.style]:""}${t.travel&&TRAVEL_NAMES[t.travel]?" · "+TRAVEL_NAMES[t.travel]:""}${t.airline?" · "+esc(t.airline.name)+(t.cabin?" "+CABIN_NAMES[t.cabin]:""):""}${t.car?" · "+esc(t.car.name):""}${nb>1?` · ${nb} bags`:""}</div>
       </div>
       <div class="unit" role="group" aria-label="Temperature unit">
         <button type="button" class="ghost" data-unit="F" aria-pressed="${unit==="F"}">°F</button>
@@ -1266,6 +1317,8 @@ function render(){
     ${suitcaseSays(s,mine,total,usable,ab,nb)}
     ${recheckHtml}
     ${airlineCheck(t,ab,mine)}
+    ${carHtml}
+    ${rulesHtml}
     ${fcHtml}
     ${wxHtml}
     ${daysHtml}
@@ -1287,6 +1340,7 @@ function render(){
     </div>
     ${s.tips&&s.tips.length?`<div class="cat"><h3>Packing tips</h3><ul class="tips">${s.tips.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}
     ${s.example?"":`<button type="button" class="go sharebtn" id="shareBtn">Share my list</button>`}
+    ${roadHtml}
     ${remindHtml}
     ${s.example?"":`<div class="fbcard">
       <div><b>How did PackWise do?</b><span>7 quick questions, about 2 minutes. Your honest feedback shapes what we build next.</span></div>
@@ -1430,7 +1484,56 @@ function setTravel(m){
   travel=m; store.set("pw-travel",m);
   document.querySelectorAll("[data-travel]").forEach(b=>b.setAttribute("aria-checked",b.dataset.travel===m));
   $("#flyBox").hidden=m!=="plane";
+  $("#carBox").hidden=m!=="car";
 }
+/* ---------- car trips: your car, what's already in it, where you start ---------- */
+const CAR_STUFF=[["Car seat",40],["Stroller",100],["Golf clubs",130],["Work gear",60],["Cooler",45],["Pet crate",150],["Sports gear",70]];
+let carInfo=store.get("pw-car")||null;          // {name,cargoL,foldedL}
+let carLoad=store.get("pw-carload")||{mode:"empty",items:[],other:""};
+function setLoad(m){
+  carLoad.mode=m; store.set("pw-carload",carLoad);
+  document.querySelectorAll("[data-load]").forEach(b=>b.setAttribute("aria-checked",b.dataset.load===m));
+  $("#carListBox").hidden=m!=="list";
+}
+function drawCarChips(){
+  $("#carChips").innerHTML=CAR_STUFF.map(([n])=>`<button type="button" data-stuff="${esc(n)}" aria-pressed="${carLoad.items.includes(n)}">${esc(n)}</button>`).join("");
+}
+const cuft=L=>Math.round(L/28.317);
+function drawCarInfo(){
+  const el=$("#carInfo");
+  if(!carInfo){el.hidden=true;return}
+  el.innerHTML=`<strong>${esc(carInfo.name)}</strong>: about ${carInfo.cargoL} L (${cuft(carInfo.cargoL)} cu ft) of trunk space${carInfo.foldedL>carInfo.cargoL?`, ${carInfo.foldedL} L (${cuft(carInfo.foldedL)} cu ft) with the back seats folded`:""}.`;
+  el.hidden=false;
+}
+document.querySelectorAll("[data-load]").forEach(b=>b.addEventListener("click",()=>setLoad(b.dataset.load)));
+$("#carChips").addEventListener("click",e=>{
+  const b=e.target.closest("[data-stuff]"); if(!b) return;
+  const n=b.dataset.stuff, i=carLoad.items.indexOf(n);
+  if(i>=0) carLoad.items.splice(i,1); else carLoad.items.push(n);
+  store.set("pw-carload",carLoad); drawCarChips();
+});
+$("#carOther").addEventListener("input",()=>{carLoad.other=$("#carOther").value.slice(0,120); store.set("pw-carload",carLoad)});
+$("#origin").addEventListener("input",()=>store.set("pw-origin",$("#origin").value.slice(0,120)));
+$("#carModel").addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventDefault();$("#carBtn").click()} });
+$("#carBtn").addEventListener("click",async()=>{
+  const q=$("#carModel").value.trim(), st=$("#carStatus"), btn=$("#carBtn"); st.className="status";
+  if(!q){st.textContent="Type your car's make and model first, like Honda CR-V.";st.classList.add("err");return}
+  btn.disabled=true; btn.classList.add("busy"); btn.textContent="Looking…"; st.textContent="Looking up your trunk space…";
+  try{
+    const sample=await samplePromise; if(!sample) throw {code:"sampling_disabled"};
+    const r=await sample.json(`A traveler says their car is: """${q.slice(0,120)}"""
+Identify the vehicle (most likely recent model year if none is given).
+cargoL: cargo or trunk volume in liters behind the rear seats, from the maker's published specs as you know them.
+foldedL: cargo volume in liters with the rear seats folded down; use the same number as cargoL if the seats don't fold.
+If it isn't a real car, set found to false.
+Reply with only JSON: {"found":true,"name":"2023 Honda CR-V","cargoL":1110,"foldedL":2166}`,{modelTier:"default",cache:{gcTime:86400000}});
+    if(!r||r.found===false||!(Number(r.cargoL)>0)){st.textContent="I couldn't find that car. Try the make and model, like Toyota RAV4.";st.classList.add("err");return}
+    carInfo={name:String(r.name||q).slice(0,60),cargoL:Math.round(Number(r.cargoL)),foldedL:Math.round(Math.max(Number(r.foldedL)||0,Number(r.cargoL)))};
+    store.set("pw-car",carInfo); st.textContent=""; drawCarInfo();
+  }catch(err){
+    st.textContent=ERR[err&&err.code]||"The lookup didn't go through. Try again."; st.classList.add("err");
+  }finally{btn.disabled=false; btn.classList.remove("busy"); btn.textContent="Look up"}
+});
 document.querySelectorAll("[data-travel]").forEach(b=>b.addEventListener("click",()=>setTravel(b.dataset.travel)));
 function chosenAirline(){return airInfo&&airInfo.airlines?airInfo.airlines.find(a=>a.name===airlineName)||null:null}
 function drawAirlines(){
@@ -1645,6 +1748,84 @@ async function recheck(){
   }
 }
 
+/* ---------- car trip cards ---------- */
+const SHOW_SHOP=false;  // turn on (true) once the affiliate account is set up
+const AMAZON_TAG="";   // add your Amazon Associates tag here (e.g. "packwise-20") once you're approved
+function shopLink(q){return "https://www.amazon.com/s?k="+encodeURIComponent(q)+(AMAZON_TAG?"&tag="+encodeURIComponent(AMAZON_TAG):"")}
+function hasKids(t){return /\b(kids?|child(ren)?|son|daughter|baby|babies|toddlers?|infant|family)\b/i.test([t.itinerary,t.purposeOther,t.purpose,t.extra,t.notes].filter(Boolean).join(" "))}
+function carCheck(s){
+  const t=s.trip; if(s.example||t.travel!=="car"||!t.car) return "";
+  const c=t.car, load=t.carLoad||{mode:"empty",items:[]};
+  const bagsL=tripBags(t).reduce((a,b)=>a+b.bagL,0);
+  const listed=load.mode==="list"?[...load.items.map(n=>[n,(CAR_STUFF.find(x=>x[0]===n)||[n,50])[1]]),...(load.other?[[load.other,50]]:[])]:[];
+  const takenL=listed.reduce((a,x)=>a+x[1],0);
+  const roomL=load.mode==="limited"?Math.round(c.cargoL*0.5):Math.max(0,c.cargoL-takenL);
+  const roomFold=load.mode==="limited"?Math.round(c.foldedL*0.5):Math.max(0,c.foldedL-takenL);
+  let state="good", head="Your bags fit in the trunk", sub=`Plenty of room in your ${c.name}.`;
+  if(bagsL>roomL*0.9){
+    if(c.foldedL>c.cargoL&&bagsL<=roomFold*0.9){state="warn";head="Fold a back seat down";sub="Your bags only fit with part of the back seat folded."}
+    else{state="bad";head="Your bags may not fit";sub="Try a smaller bag, a roof box, or leave something at home."}
+  }
+  const rows=[["Trunk space",`${c.cargoL} L (${cuft(c.cargoL)} cu ft)`],
+    ...(load.mode==="limited"?[["Already in there","Limited space, so we planned for about half"]]:[]),
+    ...(listed.length?[["Already in there",listed.map(x=>x[0]).join(", ")+` (about ${takenL} L)`]]:[]),
+    ["Room left for bags",`about ${roomL} L (${cuft(roomL)} cu ft)`],
+    ["Your bags",`${bagsL} L (${cuft(bagsL)} cu ft)`]];
+  return `<div class="aircheck carcheck ${state==="good"?"":"warn"}">
+    <div class="achead"><span class="acicon" aria-hidden="true">${state==="good"?"✓":"!"}</span><div><b>${esc(head)}</b><span>${esc(sub)}</span></div></div>
+    <div class="acrows">${rows.map(([l,v])=>`<div class="acrow"><b>${esc(l)}</b><span>${esc(v)}</span></div>`).join("")}</div>
+    <p class="acnote">Rough sizes. Soft bags squeeze into gaps better than hard suitcases.</p></div>`;
+}
+function roadCard(s){
+  const t=s.trip; if(s.example||t.travel!=="car") return "";
+  const kids=hasKids(t);
+  return `<div class="road"><h3>Before you hit the road</h3>
+    <ul>
+      <li>Check tire pressure, including the spare. The right number is on a sticker inside the driver's door.</li>
+      <li>Fill up the tank, or charge up if you drive electric, and plan your fuel stops.</li>
+      <li>Top up the windshield washer fluid and check your wipers and lights.</li>
+      <li>Pack a roadside kit: jumper cables, a flashlight, a first-aid kit and a tire inflator.</li>
+      <li>Download offline maps in case you lose signal on the way.</li>
+      <li>Stop for a stretch about every 2 hours to stay alert.</li>
+    </ul>
+    ${kids?`<div class="kids"><b>Riding with kids</b><ul><li>Mess-free snacks like crackers, cheese sticks and apple slices</li><li>Wipes, a roll of paper towels and a small trash bag</li><li>Headphones, a charged tablet, books or car games</li><li>A small pillow and blanket for naps</li></ul></div>`:""}
+    ${SHOW_SHOP?`<a class="go shop" href="${shopLink("car emergency roadside kit")}" target="_blank" rel="noopener sponsored">Shop roadside kits</a>`:""}
+  </div>`;
+}
+function rulesCard(s){
+  const t=s.trip; if(s.example||t.travel!=="car") return "";
+  const r=s.route;
+  if(!t.origin) return `<div class="rules"><h3>Rules of the road</h3><p class="hint">Add where you're starting from in the Plan step, and PackWise will flag driving rules in each state you pass through.</p></div>`;
+  if(!r||r.status==="error") return `<div class="rules"><h3>Rules of the road</h3><p class="hint">${r&&r.status==="error"?"We couldn't check the rules just now.":`See what's different from home in each state between ${esc(t.origin)} and ${esc(t.dest.split(",")[0])}.`}</p><button type="button" class="go" data-route>${r?"Try again":"Check the rules on my route"}</button></div>`;
+  if(r.status==="loading") return `<div class="rules"><h3>Rules of the road</h3><div class="ldg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16v-4l2-5h12l2 5v4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M4 12h16" stroke="currentColor" stroke-width="2"/><circle cx="7.5" cy="17" r="2" fill="currentColor"/><circle cx="16.5" cy="17" r="2" fill="currentColor"/></svg>Checking the rules along your route…</div></div>`;
+  const states=(r.states||[]).filter(x=>x&&x.state&&Array.isArray(x.notes)&&x.notes.length);
+  return `<div class="rules"><h3>Rules of the road</h3>
+    <p class="hint">${states.length?`Things that are different from ${esc(r.home||"home")} in each state on your way.`:esc(r.note||"No state-to-state differences to flag on this route.")}</p>
+    ${states.map(x=>`<div class="stt"><b>${esc(x.state)}</b><ul>${x.notes.slice(0,4).map(n=>`<li>${esc(n)}</li>`).join("")}</ul></div>`).join("")}
+    <p class="rmnote">Traffic laws change. Double-check each state's DMV or transportation website before you go.</p></div>`;
+}
+let routeBusy=false;
+async function fetchRoute(){
+  if(routeBusy||state.example) return; const t=state.trip; if(t.travel!=="car"||!t.origin) return;
+  routeBusy=true; const id=state.tripId;
+  state.route={status:"loading"}; render();
+  let out;
+  try{
+    const sample=await samplePromise; if(!sample) throw {code:"sampling_disabled"};
+    const r=await sample.json(`A traveler is driving from """${t.origin}""" to """${t.dest}""".
+If this is a drive within the United States: name their home state (where they start), then list, in driving order on the usual fastest route, each OTHER state they drive through, including the destination state if it differs from home.
+For each of those states, give 2 to 4 short, practical notes on traffic laws that differ from their home state, written for a driver from that home state. Focus on things that could get them a ticket or surprise them: handheld phone and texting rules, right or left turn on red, move-over laws, headlights with wipers, left-lane rules, speed or red-light cameras, studded tires or chains, tolls and cash-free tolling, open container rules. Say clearly when something allowed at home is not allowed there, like "Unlike New York, ...". Use the laws as you know them; don't invent precise fine amounts.
+If the start and destination are in the same state, return an empty states list with a short note. If this isn't a US road trip, return an empty states list and a note saying the rules check covers US states only.
+Reply with only JSON: {"home":"New York","states":[{"state":"Pennsylvania","notes":["..."]}],"note":""}`,{modelTier:"default",cache:{gcTime:86400000}});
+    if(!r||!Array.isArray(r.states)) throw {code:"invalid_json"};
+    out={status:"done",home:String(r.home||"").slice(0,40),note:String(r.note||"").slice(0,200),
+      states:r.states.slice(0,10).map(x=>({state:String(x.state||"").slice(0,40),notes:(Array.isArray(x.notes)?x.notes:[]).slice(0,4).map(n=>String(n).slice(0,220))}))};
+  }catch(err){ out={status:"error"} }
+  finally{routeBusy=false}
+  if(state.tripId!==id) return;   // they switched trips meanwhile
+  state.route=out; save(); render();
+}
+
 /* ---------- reminders: calendar alerts ---------- */
 function remindCard(s){
   if(s.example||daysUntil(s.trip.end)<0) return "";
@@ -1710,6 +1891,7 @@ function saveIcs(text,name){
 $("#result").addEventListener("change",e=>{ if(e.target.closest("#remindCard")){ readRemind(); save() } });
 $("#result").addEventListener("click",e=>{
   if(e.target.closest("[data-recheck]")){ recheck(); return }
+  if(e.target.closest("[data-route]")){ fetchRoute(); return }
   if(!e.target.closest("#remindBtn")) return;
   const r=readRemind(), st=$("#remindStatus"); st.className="status"; save();
   if(r.leaveAlert&&!r.leave&&!r.morning&&!r.recheck){st.textContent="Add a leaving time, or pick another reminder.";st.classList.add("err");return}
@@ -1733,6 +1915,8 @@ $("#tripsPanel").addEventListener("click",e=>{
   if(draft&&draft.bag){const r=document.querySelector(`input[name="bag"][value="${draft.bag}"]`); if(r) r.checked=true}
   drawMoreBags(draft&&Array.isArray(draft.extraBags)?draft.extraBags:null);
   setTravel(travel); setCabin(cabin); drawAirlines();
+  $("#origin").value=store.get("pw-origin")||""; $("#carModel").value=carInfo?carInfo.name:"";
+  $("#carOther").value=carLoad.other||""; setLoad(carLoad.mode||"empty"); drawCarChips(); drawCarInfo();
 })();
 
 /* ---------- Claude ---------- */
@@ -1872,7 +2056,11 @@ $("#itinClear").onclick=()=>{itinFile=null;$("#itinPhoto").value="";$("#itinPrev
 function travelRule(t){
   if(t.travel==="plane") return `TRAVEL: by plane${t.airline?` on ${t.airline.name}${t.airport?" from "+t.airport:""}`:""}${t.cabin==="business"?", flying business or first class (a bigger bag allowance, and an amenity kit with basics like an eye mask and socks is usually provided)":t.cabin?", flying economy":""}. Keep carry-on liquids in 3.4 oz (100 ml) bottles in one clear quart bag, keep medications, chargers, ID and valuables in the carry-on, and wear the bulkiest shoes and jacket on the flight.`;
   if(t.travel==="train") return "TRAVEL: by train. There are usually no strict bag rules, but the traveler carries and lifts their own bags onto racks, so favor a lighter load, plus snacks, a water bottle, headphones and a charger for the ride. Don't mention airline or liquids rules.";
-  if(t.travel==="car") return "TRAVEL: by car (road trip). Space and weight matter less, so it's fine to add road-trip extras like a cooler, snacks and drinks, a phone mount, a car charger and a travel pillow. Don't mention airline or liquids rules.";
+  if(t.travel==="car"){
+    const tight=t.carLoad&&t.carLoad.mode==="limited";
+    const stuff=t.carLoad&&t.carLoad.mode==="list"?[...t.carLoad.items,t.carLoad.other].filter(Boolean).join(", "):"";
+    return `TRAVEL: by car (road trip)${t.origin?` from ${t.origin}`:""}${t.car?` in a ${t.car.name}`:""}. Add road-trip comfort extras like snacks and drinks, a refillable water bottle, a phone mount, a car charger and a travel pillow${tight?"":", plus a small cooler"}. ${tight?"Trunk space is limited, so keep the list lean and favor soft bags that squeeze into gaps.":stuff?`Already in the car: ${stuff}, so favor soft bags that pack around it.`:"Space matters less than when flying."} If the traveler mentions kids, add mess-free snacks, wipes, a trash bag for the car, and something to keep them entertained. Don't mention airline or liquids rules.`;
+  }
   if(t.travel==="other") return "TRAVEL: by bus, boat or another way. Give general travel advice that fits ground or sea travel, and don't mention airline rules.";
   return "";
 }
@@ -1935,6 +2123,11 @@ $("#tripForm").addEventListener("submit",async e=>{
   t.travel=travel;
   const al=travel==="plane"?chosenAirline():null;
   if(al){t.airline=al; t.airport=airInfo.airport; t.cabin=cabin}
+  if(travel==="car"){
+    const o=$("#origin").value.trim(); if(o) t.origin=o.slice(0,120);
+    if(carInfo) t.car={...carInfo};
+    t.carLoad={mode:carLoad.mode,items:carLoad.mode==="list"?[...carLoad.items]:[],other:carLoad.mode==="list"?(carLoad.other||"").trim():""};
+  }
   const r0=document.querySelector('input[name="bag"]:checked');
   store.set("pw-form3",{dest,start,end,purpose:$("#purpose").value,purposeOther:otherTxt,airport:$("#airport").value,style,itin:t.itinerary,laundry:t.laundry,customL:$("#customL").value,useCustom:$("#useCustom").checked,bag:r0&&r0.value,bagCount:$("#bagCount").value,extraBags:[...$("#moreBags").querySelectorAll("select")].map(s=>s.value)});
 
@@ -1962,6 +2155,7 @@ $("#tripForm").addEventListener("submit",async e=>{
   }
   justChanged=new Set(); activeBag=1;
   state={trip:t,...result,chat:[],tripId:"t"+Date.now().toString(36)}; save(); render(); renderChat();
+  if(t.travel==="car"&&t.origin) fetchRoute();
   stopLoading();
   if(window.matchMedia("(max-width:840px)").matches) $("#result").scrollIntoView({behavior:"smooth",block:"start"});
 });
