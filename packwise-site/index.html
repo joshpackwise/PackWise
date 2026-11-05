@@ -321,7 +321,7 @@ button{font:inherit;cursor:pointer}
     <p>Imagine if your suitcase could talk to you.</p>
     <div class="what">Tell PackWise where you're going and it builds your packing list from the weather, checks that your bag fits, and talks you through packing.</div>
     <div class="vet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></svg>Veteran owned and operated</div>
-    <small>Never guess what to pack again. Prototype v0.19</small>
+    <small>Never guess what to pack again. Prototype v0.20</small>
   </div>
   <style>
   .hero .what{font-size:14.5px;line-height:1.45;color:var(--on-band);margin-top:8px;max-width:60ch}
@@ -426,17 +426,11 @@ button{font:inherit;cursor:pointer}
       <div class="flybox carbox" id="carBox" hidden>
         <label for="origin">Starting from <span class="hint">Optional. We'll flag rules of the road in each state you drive through.</span></label>
         <input id="origin" placeholder="City and state, e.g. Syracuse, NY" autocomplete="off">
-        <span class="flabel" id="carH">Your car <span class="hint" style="font-weight:400">Optional. We'll check your bags fit in the trunk.</span></span>
-        <div class="carsel" role="group" aria-labelledby="carH">
-          <label for="carYear"><span>Year</span><select id="carYear"><option value="">Year</option></select></label>
-          <label for="carMake"><span>Make</span><select id="carMake" disabled><option value="">Make</option></select></label>
-          <label for="carMod"><span>Model</span><select id="carMod" disabled><option value="">Model</option></select></label>
-        </div>
-        <div class="airrow" id="carTypeRow" hidden>
-          <input id="carModel" placeholder="Year, make and model, e.g. 2023 Toyota Tacoma" autocomplete="off" aria-label="Year, make and model">
+        <label for="carModel">Your car <span class="hint">Optional. Type the year, make and model, and we'll check your bags fit.</span></label>
+        <div class="airrow">
+          <input id="carModel" placeholder="Year, make and model, e.g. 2023 Toyota Tacoma" autocomplete="off">
           <button type="button" class="ghost" id="carBtn">Look up</button>
         </div>
-        <button type="button" class="linkbtn" id="carTypeToggle">Can't find your car? Type it instead</button>
         <p class="status" id="carStatus" role="status"></p>
         <p class="carinfo" id="carInfo" hidden></p>
         <span class="flabel" id="loadH">Anything already in your car?</span>
@@ -657,14 +651,7 @@ button{font:inherit;cursor:pointer}
     .flybox{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:16px;background:var(--sky-soft);color:#1D2A28}
     .flybox label{color:#1D2A28}
     .flybox .hint{color:#3B4A47}
-    .flybox input,.flybox select{background:#FFFFFF;color:#1D2A28}
-    .carsel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:8px}
-    .carsel label:last-child{grid-column:1/-1}
-    .carsel label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;font-weight:600;color:#1D2A28;min-width:0}
-    .carsel select{width:100%;min-width:0;min-height:46px}
-    .carsel select:disabled{opacity:.55}
-    #carTypeRow[hidden]{display:none}
-    .linkbtn{align-self:flex-start;background:none;border:0;padding:6px 0;min-height:44px;color:#245A91;font-size:13px;font-weight:600;text-decoration:underline;cursor:pointer}
+    .flybox input{background:#FFFFFF;color:#1D2A28}
     .airrow{display:flex;gap:8px;flex-wrap:wrap}
     .airrow .apac{flex:1 1 180px;min-width:0}
     .flybox .acl li{color:var(--ink)}
@@ -1499,69 +1486,6 @@ function setTravel(m){
   $("#flyBox").hidden=m!=="plane";
   $("#carBox").hidden=m!=="car";
 }
-/* ---------- year / make / model dropdowns (free NHTSA vPIC vehicle database) ---------- */
-const CAR_MAKES=["Acura","Alfa Romeo","Audi","BMW","Buick","Cadillac","Chevrolet","Chrysler","Dodge","Fiat","Ford","Genesis","GMC","Honda","Hummer","Hyundai","Infiniti","Jaguar","Jeep","Kia","Land Rover","Lexus","Lincoln","Lucid","Mazda","Mercedes-Benz","Mercury","Mini","Mitsubishi","Nissan","Polestar","Pontiac","Porsche","Ram","Rivian","Saab","Saturn","Scion","Smart","Subaru","Suzuki","Tesla","Toyota","Volkswagen","Volvo"];
-let carSel=store.get("pw-carsel")||{y:"",mk:"",md:""};
-const modelCache={};
-function fillYears(){
-  const top=new Date().getFullYear()+1, opts=['<option value="">Year</option>'];
-  for(let y=top;y>=1996;y--) opts.push(`<option value="${y}">${y}</option>`);
-  $("#carYear").innerHTML=opts.join("");
-}
-function fillMakes(){
-  $("#carMake").innerHTML='<option value="">Make</option>'+CAR_MAKES.map(m=>`<option value="${esc(m)}">${esc(m)}</option>`).join("")+'<option value="__other">Other / not listed</option>';
-}
-async function loadModels(year,make){
-  const k=year+"|"+make; if(modelCache[k]) return modelCache[k];
-  const base=`https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMakeYear/make/${encodeURIComponent(make)}/modelyear/${year}/vehicletype/`;
-  const sets=await Promise.all(["car","multipurpose","truck"].map(t=>fetch(base+t+"?format=json").then(r=>{if(!r.ok) throw 0; return r.json()})));
-  const want=make.toUpperCase(), names=new Set();
-  sets.forEach(d=>(d.Results||[]).forEach(x=>{ if(String(x.Make_Name||"").toUpperCase()===want&&x.Model_Name) names.add(String(x.Model_Name).trim()) }));
-  return modelCache[k]=[...names].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
-}
-function showTypeRow(on,focus=true){ $("#carTypeRow").hidden=!on; $("#carTypeToggle").hidden=on; if(on&&focus) $("#carModel").focus() }
-async function onCarPick(which){
-  const y=$("#carYear").value, mk=$("#carMake").value, st=$("#carStatus"); st.className="status";
-  if(which==="year"){ $("#carMake").disabled=!y; if(!y){$("#carMake").value=""} }
-  if(which==="year"||which==="make"){
-    const mod=$("#carMod"); mod.innerHTML='<option value="">Model</option>'; mod.disabled=true;
-    if(mk==="__other"){ showTypeRow(true); carSel={y,mk:"",md:""}; store.set("pw-carsel",carSel); return }
-    carSel={y,mk,md:""}; store.set("pw-carsel",carSel);
-    if(!y||!mk) return;
-    mod.innerHTML='<option value="">Loading models…</option>';
-    try{
-      const list=await loadModels(y,mk);
-      if($("#carYear").value!==y||$("#carMake").value!==mk) return;   // changed meanwhile
-      if(!list.length){ mod.innerHTML='<option value="">No models found</option>'; st.textContent=`No ${mk} models listed for ${y}. Try another year, or type your car instead.`; return }
-      mod.innerHTML='<option value="">Model</option>'+list.map(m=>`<option value="${esc(m)}">${esc(m)}</option>`).join(""); mod.disabled=false;
-      return list;
-    }catch(e){
-      mod.innerHTML='<option value="">Model</option>';
-      st.textContent="Couldn't load the car list right now, so type your car instead."; st.classList.add("err"); showTypeRow(true,false);
-    }
-    return;
-  }
-  if(which==="model"){
-    const md=$("#carMod").value; carSel={y,mk,md}; store.set("pw-carsel",carSel);
-    if(!md) return;
-    $("#carModel").value=`${y} ${mk} ${md}`;
-    $("#carBtn").click();   // look up the trunk space right away
-  }
-}
-$("#carYear").addEventListener("change",()=>onCarPick("year"));
-$("#carMake").addEventListener("change",()=>onCarPick("make"));
-$("#carMod").addEventListener("change",()=>onCarPick("model"));
-$("#carTypeToggle").addEventListener("click",()=>showTypeRow(true));
-async function restoreCarSel(){
-  fillYears(); fillMakes();
-  if(!carSel.y) return;
-  $("#carYear").value=carSel.y; $("#carMake").disabled=false;
-  if(!carSel.mk) return;
-  const md=carSel.md; $("#carMake").value=carSel.mk;
-  const list=await onCarPick("make");
-  if(list&&md&&list.includes(md)){ $("#carMod").value=md; carSel.md=md; store.set("pw-carsel",carSel) }
-}
-
 /* ---------- car trips: your car, what's already in it, where you start ---------- */
 const CAR_STUFF=[["Car seat",40],["Stroller",100],["Golf clubs",130],["Work gear",60],["Cooler",45],["Pet crate",150],["Sports gear",70]];
 let carInfo=store.get("pw-car")||null;          // {name,cargoL,foldedL}
@@ -1593,7 +1517,7 @@ $("#origin").addEventListener("input",()=>store.set("pw-origin",$("#origin").val
 $("#carModel").addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventDefault();$("#carBtn").click()} });
 $("#carBtn").addEventListener("click",async()=>{
   const q=$("#carModel").value.trim(), st=$("#carStatus"), btn=$("#carBtn"); st.className="status";
-  if(!q){st.textContent="Type your car's make and model first, like Honda CR-V.";st.classList.add("err");return}
+  if(!q){st.textContent="Type your car's year, make and model first, like 2023 Toyota Tacoma.";st.classList.add("err");return}
   btn.disabled=true; btn.classList.add("busy"); btn.textContent="Looking…"; st.textContent="Looking up your trunk space…";
   try{
     const sample=await samplePromise; if(!sample) throw {code:"sampling_disabled"};
@@ -1603,7 +1527,7 @@ cargoL: cargo or trunk volume in liters behind the rear seats, from the maker's 
 foldedL: cargo volume in liters with the rear seats folded down; use the same number as cargoL if the seats don't fold.
 If it isn't a real car, set found to false.
 Reply with only JSON: {"found":true,"name":"2023 Honda CR-V","cargoL":1110,"foldedL":2166}`,{modelTier:"default",cache:{gcTime:86400000}});
-    if(!r||r.found===false||!(Number(r.cargoL)>0)){st.textContent="I couldn't find that car. Try the make and model, like Toyota RAV4.";st.classList.add("err");return}
+    if(!r||r.found===false||!(Number(r.cargoL)>0)){st.textContent="I couldn't find that car. Try the year, make and model, like 2023 Toyota RAV4.";st.classList.add("err");return}
     carInfo={name:String(r.name||q).slice(0,60),cargoL:Math.round(Number(r.cargoL)),foldedL:Math.round(Math.max(Number(r.foldedL)||0,Number(r.cargoL)))};
     store.set("pw-car",carInfo); st.textContent=""; drawCarInfo();
   }catch(err){
@@ -1992,7 +1916,6 @@ $("#tripsPanel").addEventListener("click",e=>{
   drawMoreBags(draft&&Array.isArray(draft.extraBags)?draft.extraBags:null);
   setTravel(travel); setCabin(cabin); drawAirlines();
   $("#origin").value=store.get("pw-origin")||""; $("#carModel").value=carInfo?carInfo.name:"";
-  restoreCarSel(); if(carInfo&&!carSel.md) showTypeRow(true,false);
   $("#carOther").value=carLoad.other||""; setLoad(carLoad.mode||"empty"); drawCarChips(); drawCarInfo();
 })();
 
