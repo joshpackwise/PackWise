@@ -288,6 +288,7 @@ button{font:inherit;cursor:pointer}
 .handsfree .hfbtn[aria-pressed="true"]{background:var(--brand-deep);color:var(--on-brand)}
 .handsfree .hfsub{font-size:13px;color:var(--muted);flex:1;min-width:180px}
 .handsfree .hfline{display:flex;gap:8px}
+.handsfree .check .hfsub{display:block;flex:none;min-width:0;font-size:12px}
 .handsfree .hfline input{flex:1;min-width:0}
 .handsfree .hfstat{font-size:13.5px;font-weight:600;color:var(--brand-deep);margin:0;min-height:1em}
 .handsfree .hfstat.listen::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;background:#D9534F;margin-right:7px;animation:hfpulse 1.2s infinite}
@@ -336,7 +337,7 @@ button{font:inherit;cursor:pointer}
     <p>Imagine if your suitcase could talk to you.</p>
     <div class="what">Tell PackWise where you're going and it builds your packing list from the weather, checks that your bag fits, and talks you through packing.</div>
     <div class="vet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></svg>Veteran owned and operated</div>
-    <small>Never guess what to pack again. Prototype v0.21</small>
+    <small>Never guess what to pack again. Prototype v0.22</small>
   </div>
   <style>
   .hero .what{font-size:14.5px;line-height:1.45;color:var(--on-band);margin-top:8px;max-width:60ch}
@@ -1493,18 +1494,25 @@ if(!TTS){ $("#autoSpeak").closest("label").hidden=true; $("#voiceSel").closest("
 try{ const a=store.get("pw-autospeak"); if(a===false) $("#autoSpeak").checked=false }catch(e){}
 $("#autoSpeak").addEventListener("change",e=>{ store.set("pw-autospeak",e.target.checked); if(!e.target.checked) stopSpeaking() });
 
-/* ---------- hands-free packing: "I packed my socks" ticks Socks and says what's next ---------- */
+/* ---------- hands-free packing: "I packed my socks" ticks Socks and says what's next ----------
+   The mic stays on for the whole session (continuous listening). What you say is matched to the list
+   right on the phone, so it's instant; the AI is only asked when nothing on the list matches.
+   While the suitcase talks, anything the mic hears is ignored so it doesn't hear itself. */
 const SR = window.SpeechRecognition||window.webkitSpeechRecognition||null;
 const MIC = `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
-let hfOn=false, hfBusy=false, hfRec=null, hfMsg="", hfLast="";
+let hfOn=false, hfRec=null, hfMsg="", hfLast="", hfTalking=false, hfMuteUntil=0, hfFails=[], hfPaused=false, hfQueue=Promise.resolve();
+let hfVoice=store.get("pw-hfvoice")!==false;
 function handsFreeHtml(){
   return `<div class="handsfree" id="handsFree">
     <div class="hfrow">
       <button type="button" class="go hfbtn" id="hfBtn" aria-pressed="${hfOn}">${MIC}${hfOn?"Stop hands-free":"Pack hands-free"}</button>
-      <span class="hfsub">Talk to your suitcase while you pack. Say things like "I packed my socks" or "what's next?" and I'll tick it off and tell you the next item.</span>
+      <span class="hfsub">Talk to your suitcase while you pack. Say "I packed my socks", "socks and shirts are in", "what's next?" or "take out the sandals".</span>
     </div>
-    ${hfOn?`<form class="hfline" id="hfForm"><input id="hfText" type="text" autocomplete="off" placeholder="${SR?"Or type it here":"Tap here, then the mic on your keyboard"}" aria-label="What did you pack?"><button type="submit" class="ghost">Send</button></form>`:""}
-    <p class="hfstat ${hfOn&&!hfBusy&&SR&&hfRec?"listen":""}" id="hfStat" role="status">${esc(hfMsg)}</p>
+    ${hfOn?`
+    ${hfPaused?`<button type="button" class="go hfbtn" id="hfResume">${MIC}Tap to keep listening</button>`:""}
+    <form class="hfline" id="hfForm"><input id="hfText" type="text" autocomplete="off" placeholder="${SR?"Or type it here":"Tap here, then the mic on your keyboard"}" aria-label="What did you pack?"><button type="submit" class="ghost">Send</button></form>
+    ${TTS?`<label class="check" for="hfVoice"><input id="hfVoice" type="checkbox" ${hfVoice?"checked":""}> Say the next item out loud <span class="hfsub">(turn off if the mic keeps cutting out)</span></label>`:""}`:""}
+    <p class="hfstat ${hfOn&&hfRec&&!hfPaused?"listen":""}" id="hfStat" role="status">${esc(hfMsg)}</p>
   </div>`;
 }
 function hfStatus(msg,listening){
@@ -1512,98 +1520,151 @@ function hfStatus(msg,listening){
   el.textContent=msg; el.classList.toggle("listen",!!listening);
 }
 function hfChecked(){ return store.get(key(state.trip))||{} }
-function hfOrder(){ // the list in the order it's shown: active bag, by category
-  const nb=tripBags(state.trip).length;
-  const mine=state.items.filter(i=>bagOf(i,nb)===activeBag);
-  return CATS.flatMap(c=>mine.filter(i=>i.category===c));
-}
+function hfOrder(){ const nb=tripBags(state.trip).length; const mine=state.items.filter(i=>bagOf(i,nb)===activeBag); return CATS.flatMap(c=>mine.filter(i=>i.category===c)) }
 function hfNext(){ const c=hfChecked(); return hfOrder().find(i=>!c[norm(i.name)])||null }
 function hfItemSay(i){ return (i.qty>1?i.qty+" ":"")+i.name.replace(/\(.*?\)/g,"").trim() }
+
+/* --- matching what was said to list items, on the phone --- */
+const HF_SKIP=new Set("and or the a an of my your for with to in on travel size kit set pair pairs extra small large light warm nice item items product products case cream bag wear outfit layer base one two three four five six seven eight nine ten some all".split(" "));
+function hfStem(w){ w=w.toLowerCase(); if(/ies$/.test(w)&&w.length>4) return w.slice(0,-3)+"y"; if(/(ss|us)$/.test(w)) return w; if(/s$/.test(w)&&w.length>3) return w.slice(0,-1); return w }
+function hfWords(s){ return String(s).toLowerCase().replace(/\(.*?\)/g," ").replace(/t-shirt/g,"tshirt").split(/[^a-z0-9]+/).filter(Boolean).map(hfStem) }
+function hfMatchPart(said){
+  const raw=hfWords(said), spoken=new Set(raw);
+  for(let k=0;k<raw.length-1;k++) if(raw[k]==="t"&&raw[k+1]==="shirt"){ spoken.add("tshirt"); spoken.delete("shirt") } // "t shirt" said aloud
+  const scored=state.items.map(i=>{
+    const ws=[...new Set(hfWords(i.name).filter(w=>w.length>=3&&!HF_SKIP.has(w)))];
+    const hit=ws.filter(w=>spoken.has(w));
+    return {i,hit,score:hit.length};
+  }).filter(x=>x.score>0);
+  // drop an item when another item matches everything it matched and more ("dress shoes" beats "dress shirts")
+  return scored.filter(a=>!scored.some(b=>b!==a&&b.score>a.score&&a.hit.every(w=>b.hit.includes(w)))).map(x=>x.i);
+}
+function hfMatch(said){ // each part of "socks, shirts and my toothbrush" is matched on its own
+  const out=[]; String(said).split(/,|\band\b|\balso\b|\bplus\b|\bthen\b|&/i).forEach(part=>hfMatchPart(part).forEach(i=>{ if(!out.includes(i)) out.push(i) }));
+  return out;
+}
+const HF_UNPACK=/\b(took|take|taking|remove|removed|unpack|unpacked|uncheck|untick|not packed|isn'?t packed|forgot)\b/i;
+const HF_NEXT=/\b(next|what now|what else|what'?s left|what do i (need|have))\b/i;
+const HF_STOP=/^\s*(stop( listening)?|i'?m (all )?done|that'?s (all|it)|done packing|quit|exit)\b/i;
+
+/* --- talking back --- */
 function hfSay(text,then){
-  if(!TTS||!text){ then&&then(); return }
-  speechSynthesis.cancel();
+  if(!TTS||!text||!hfVoice){ then&&then(); return }
+  hfTalking=true; speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(text.replace(/\s+/g," ").trim());
   if(pickedVoice) u.voice=pickedVoice;
-  let done=false; const fin=()=>{ if(done) return; done=true; then&&then() };
+  u.rate=1.05;
+  let done=false; const fin=()=>{ if(done) return; done=true; hfTalking=false; hfMuteUntil=Date.now()+600; then&&then() };
   u.onend=u.onerror=fin;
-  setTimeout(fin, 1500+text.length*90); // some phones never fire onend
+  setTimeout(fin, 1200+text.length*80); // some phones never fire onend
   speechSynthesis.speak(u);
 }
-function hfListen(){
-  if(!hfOn||hfBusy||!SR) { if(hfOn&&!SR) hfStatus("Tap the box, then the mic on your keyboard, and say what you packed."); return }
-  try{ if(hfRec) hfRec.abort() }catch(e){}
+
+/* --- the mic: one long session, restarted quietly if the browser drops it --- */
+function hfListen(fromTap){
+  if(!hfOn||!SR) { if(hfOn&&!SR) hfStatus("This browser can't listen on its own. Tap the box, then the mic on your keyboard, and say what you packed."); return }
+  if(hfRec) return;
   const rec=new SR(); hfRec=rec;
-  rec.lang="en-US"; rec.interimResults=false; rec.continuous=false; rec.maxAlternatives=1;
-  let heard=false;
-  rec.onresult=e=>{ const said=[...e.results].map(r=>r[0].transcript).join(" ").trim(); if(said){heard=true; hfHandle(said)} };
-  rec.onerror=e=>{
-    if(e.error==="not-allowed"||e.error==="service-not-allowed"){ hfRec=null; hfStatus("PackWise needs microphone access. Allow it in your browser settings, or type in the box."); return }
+  rec.lang="en-US"; rec.continuous=true; rec.interimResults=false; rec.maxAlternatives=1;
+  let started=Date.now();
+  rec.onstart=()=>{ if(hfPaused){hfPaused=false; render()} hfStatus(hfLast?hfLast+" I'm listening.":"Listening… tell me what you packed.",true) };
+  rec.onresult=e=>{
+    for(let k=e.resultIndex;k<e.results.length;k++){
+      if(!e.results[k].isFinal) continue;
+      const said=e.results[k][0].transcript.trim();
+      if(!said) continue;
+      if(hfTalking||Date.now()<hfMuteUntil) continue; // that's the suitcase hearing itself
+      hfQueue=hfQueue.then(()=>hfHandle(said)).catch(()=>{});
+    }
   };
-  rec.onend=()=>{ if(hfRec===rec) hfRec=null; if(hfOn&&!hfBusy&&!heard) setTimeout(hfListen,250) };
-  try{ rec.start(); hfStatus(hfLast?hfLast+" I'm listening.":"Listening… tell me what you packed.",true) }catch(e){ hfRec=null; hfStatus("Tap the box, then the mic on your keyboard, and say what you packed.") }
+  rec.onerror=e=>{
+    if(e.error==="not-allowed"||e.error==="service-not-allowed"){ hfRec=null; hfPause("PackWise can't use the microphone. Allow it for this site in your phone's settings, then tap below."); }
+  };
+  rec.onend=()=>{
+    if(hfRec!==rec) return; hfRec=null;
+    if(!hfOn) return;
+    // browsers end long sessions on their own; restart, but if it keeps dying fast, ask for a tap (iPhones need one)
+    const now=Date.now(); if(now-started<4000) hfFails.push(now); hfFails=hfFails.filter(t=>now-t<15000);
+    if(hfFails.length>=3){ hfPause("The mic dropped out. Tap below to keep going."); return }
+    setTimeout(()=>hfListen(),hfTalking?600:150);
+  };
+  try{ rec.start() }catch(err){ hfRec=null; hfPause("Tap below to start listening.") }
 }
+function hfPause(msg){ hfPaused=true; hfFails=[]; hfMsg=msg; render() }
 function hfStop(msg){
-  hfOn=false; hfBusy=false; try{ if(hfRec) hfRec.abort() }catch(e){} hfRec=null;
-  if(TTS) speechSynthesis.cancel();
+  hfOn=false; hfPaused=false; const r=hfRec; hfRec=null; try{ if(r) r.abort() }catch(e){}
+  if(TTS) speechSynthesis.cancel(); hfTalking=false;
   hfMsg=msg||""; render();
 }
 function hfStart(){
-  unlockSpeech(); hfOn=true; hfBusy=false; hfMsg=""; hfLast=""; render();
+  unlockSpeech(); hfOn=true; hfPaused=false; hfFails=[]; hfMsg=""; hfLast=""; render();
   const n=hfNext();
-  const intro=n?`I'm listening. Start with your ${hfItemSay(n)}, or tell me anything you've already packed.`:"Everything on this list is already packed. Nice work!";
-  hfStatus(intro);
-  if(!n){ hfSay(intro,()=>hfStop("All packed.")); return }
-  hfSay(intro,()=>{ hfListen(); const f=$("#hfText"); if(f&&!SR) f.focus() });
+  if(!n){ hfStop("Everything on this list is already packed. Nice work!"); return }
+  const intro=`Start with your ${hfItemSay(n)}, or tell me anything you've already packed.`;
+  hfLast=intro; hfStatus(intro);
+  hfListen(true);           // start the mic right away, from the tap (iPhones require that)
+  hfSay(intro);
+  const f=$("#hfText"); if(f&&!SR) f.focus();
 }
+
+/* --- what to do with each phrase --- */
 async function hfHandle(said){
   if(!hfOn) return;
-  if(/^(stop|i'?m done|that'?s (all|it)|done packing|quit)\b/i.test(said.trim())){ hfSay("Okay, I'll stop listening. Happy travels!"); hfStop("Hands-free is off."); return }
-  hfBusy=true; try{ if(hfRec) hfRec.abort() }catch(e){} hfRec=null;
-  hfStatus(`You said: "${said}". Checking your list…`);
-  const c=hfChecked();
-  const list=state.items.map(i=>`- ${i.name}${i.qty>1?` (x${i.qty})`:""} | ${c[norm(i.name)]?"packed":"not packed"}`).join("\n");
-  const prompt=`You help a traveler tick off their packing list hands-free. They just said: """${said}"""
+  if(HF_STOP.test(said)){ hfSay("Okay, I'll stop listening."); hfStop("Hands-free is off."); return }
+  const kk=key(state.trip), cc=store.get(kk)||{};
+  let packed=[], unpacked=[], reply="";
+  let hits=hfMatch(said);
+  const unpack=HF_UNPACK.test(said);
+  if(!hits.length&&!HF_NEXT.test(said)){
+    // nothing on the list matched the words, so ask the AI (handles "all my toiletries", "the stuff for my teeth")
+    hfStatus(`You said: "${said}". Checking your list…`, !!hfRec);
+    const list=state.items.map(i=>`- ${i.name} | ${cc[norm(i.name)]?"packed":"not packed"}`).join("\n");
+    const prompt=`A traveler is ticking off their packing list hands-free. They said: """${said}"""
 Packing list (exact names):
 ${list}
-
-Work out which items they mean, even when the words don't match exactly ("my socks" means "Socks"; "toothbrush and paste" means both "Toothbrush" and "Toothpaste (travel size)"; "all my shirts" means every shirt or top item). Put items they say they packed in "packed" and items they say they took back out in "unpacked", using the exact names from the list. If they only ask what's next, leave both empty. If they mention something that isn't on the list, say so kindly in "reply".
-"reply" is one short, friendly spoken sentence confirming what you ticked (e.g. "Got it, socks are packed."), under 20 words. Don't say what's next; the app adds that.
-Reply with only JSON: {"packed":["exact name"],"unpacked":["exact name"],"reply":"..."}`;
-  let r=null;
-  try{
-    const sample=await samplePromise; if(!sample) throw {code:"sampling_disabled"};
-    r=await sample.json(prompt,{cache:false,modelTier:"quick"});
-  }catch(err){
-    hfBusy=false; if(!hfOn) return;
-    const m="Sorry, I didn't catch that. Try again.";
-    hfStatus(m); hfSay(m,hfListen); return;
-  }
-  if(!hfOn){ hfBusy=false; return }
-  const kk=key(state.trip), cc=store.get(kk)||{};
-  const byName=n=>state.items.find(i=>norm(i.name)===norm(n));
-  const ticked=[];
-  (Array.isArray(r&&r.packed)?r.packed:[]).forEach(n=>{const it=byName(n); if(it){cc[norm(it.name)]=true; ticked.push(it.name)}});
-  (Array.isArray(r&&r.unpacked)?r.unpacked:[]).forEach(n=>{const it=byName(n); if(it) cc[norm(it.name)]=false});
+Which items do they mean? Match loosely ("all my toiletries" means every Toiletries item; "stuff for my teeth" means toothbrush, toothpaste, floss). Put items they packed in "packed" and items they took back out in "unpacked", using exact names. If it's not about the list, leave both empty and say so kindly in "reply" (under 15 words); otherwise "reply" is "".
+Reply with only JSON: {"packed":["exact name"],"unpacked":["exact name"],"reply":""}`;
+    try{
+      const sample=await samplePromise; if(!sample) throw {code:"sampling_disabled"};
+      const r=await sample.json(prompt,{cache:false,modelTier:"quick"});
+      const byName=n=>state.items.find(i=>norm(i.name)===norm(n));
+      packed=(Array.isArray(r&&r.packed)?r.packed:[]).map(byName).filter(Boolean);
+      unpacked=(Array.isArray(r&&r.unpacked)?r.unpacked:[]).map(byName).filter(Boolean);
+      reply=r&&typeof r.reply==="string"?r.reply.trim():"";
+    }catch(err){ reply=`Sorry, I didn't catch "${said}".` }
+    if(!packed.length&&!unpacked.length&&!reply) reply=`I couldn't find "${said}" on your list.`;
+  } else if(unpack) unpacked=hits; else packed=hits;
+  if(!hfOn) return;
+  packed.forEach(i=>cc[norm(i.name)]=true); unpacked.forEach(i=>cc[norm(i.name)]=false);
   store.set(kk,cc);
-  justChanged=new Set(ticked.map(norm));
+  justChanged=new Set([...packed,...unpacked].map(i=>norm(i.name)));
+  const short=i=>i.name.replace(/\(.*?\)/g,"").trim().toLowerCase();
+  const join=a=>a.length<=2?a.join(" and "):a.slice(0,-1).join(", ")+" and "+a[a.length-1];
+  let say=reply;
+  if(packed.length) say=`${join(packed.map(short))}, packed.`;
+  if(unpacked.length) say=`Okay, ${join(unpacked.map(short))} back on the list.`;
   const next=hfNext();
-  let say=(r&&typeof r.reply==="string"?r.reply.trim():"");
-  if(next) say+=(say?" ":"")+`Next up: ${hfItemSay(next)}.`;
+  if(next) say+=(say?" ":"")+`Next: ${hfItemSay(next)}.`;
   else{
     const nb=tripBags(state.trip).length;
     say+=(say?" ":"")+(nb>1&&activeBag<nb?`Bag ${activeBag} is all packed. Switch to bag ${activeBag+1} when you're ready.`:"That's everything. You're all packed!");
   }
-  hfBusy=false; hfMsg=say; hfLast=say; render();
+  hfLast=say; render();
+  hfStatus(say+(hfRec?" I'm listening.":""), !!hfRec);
   if(!next){ hfSay(say,()=>hfStop(say)); return }
-  hfSay(say,hfListen);
+  hfSay(say);
 }
+
 $("#result").addEventListener("click",e=>{
-  if(!e.target.closest("#hfBtn")) return;
-  if(hfOn){ hfSay(""); hfStop("Hands-free is off.") } else hfStart();
+  if(e.target.closest("#hfBtn")){ if(hfOn) hfStop("Hands-free is off."); else hfStart(); return }
+  if(e.target.closest("#hfResume")){ unlockSpeech(); hfPaused=false; hfFails=[]; render(); hfListen(true) }
+});
+$("#result").addEventListener("change",e=>{
+  if(e.target.id!=="hfVoice") return; hfVoice=e.target.checked; store.set("pw-hfvoice",hfVoice); if(!hfVoice&&TTS) speechSynthesis.cancel();
 });
 $("#result").addEventListener("submit",e=>{
   if(e.target.id!=="hfForm") return; e.preventDefault();
-  const v=$("#hfText").value.trim(); if(!v||hfBusy) return; $("#hfText").value=""; hfHandle(v);
+  const v=$("#hfText").value.trim(); if(!v) return; $("#hfText").value=""; hfQueue=hfQueue.then(()=>hfHandle(v)).catch(()=>{});
 });
 
 function renderChat(){
